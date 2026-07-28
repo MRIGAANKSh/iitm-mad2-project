@@ -1,5 +1,6 @@
 from datetime import datetime
 from app.extensions import db
+from werkzeug.security import check_password_hash
 
 
 class User(db.Model):
@@ -19,6 +20,8 @@ class User(db.Model):
     is_active = db.Column(db.Boolean, default=True)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    def check_password(self, password):
+        return check_password_hash(self.password, password)
 
 
 class StudentProfile(db.Model):
