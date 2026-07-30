@@ -98,7 +98,19 @@ class PlacementDrive(db.Model):
         db.ForeignKey("company_profiles.id"),
         nullable=False
     )
+    salary = db.Column(db.String(50))
 
+    location = db.Column(db.String(100))
+
+    employment_type = db.Column(db.String(50))
+
+    vacancies = db.Column(db.Integer)
+
+    last_updated = db.Column(
+    db.DateTime,
+    default=datetime.utcnow,
+    onupdate=datetime.utcnow
+    )
     job_title = db.Column(db.String(150), nullable=False)
 
     job_description = db.Column(db.Text)

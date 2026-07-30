@@ -6,8 +6,12 @@ from app.extensions import db
 from app.extensions import jwt
 from app.extensions import cors
 
-
+from app.admin import admin_bp
 from app.auth import auth_bp
+
+from app.company import company_bp
+
+from app.student import student_bp
 
 
 def create_app():
@@ -22,6 +26,9 @@ def create_app():
 
     cors.init_app(app)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(admin_bp)
+    app.register_blueprint(company_bp)
+    app.register_blueprint(student_bp)
 
     @app.route("/")
     def home():
