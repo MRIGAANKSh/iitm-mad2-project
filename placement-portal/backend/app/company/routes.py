@@ -229,3 +229,86 @@ def schedule_interview(id):
 
     })
 
+@company_bp.route("/drives/<int:id>/close", methods=["PUT"])
+@jwt_required()
+def close_drive(id):
+
+    user_id = get_jwt_identity()
+
+    company = CompanyProfile.query.filter_by(
+        user_id=user_id
+    ).first_or_404()
+
+    drive = PlacementDrive.query.filter_by(
+        id=id,
+        company_id=company.id
+    ).first_or_404()
+
+    drive.status = "closed"
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Drive closed successfully."
+    })
+
+
+@company_bp.route("/drives/<int:id>", methods=["DELETE"])
+@jwt_required()
+def delete_drive(id):
+
+    user_id = get_jwt_identity()
+
+    company = CompanyProfile.query.filter_by(
+        user_id=user_id
+    ).first_or_404()
+
+    drive = PlacementDrive.query.filter_by(
+        id=id,
+        company_id=company.id
+    ).first_or_404()
+
+    applications = Application.query.filter_by(
+        drive_id=id
+    ).count()
+
+    if applications > 0:
+
+        return jsonify({
+            "message": "Cannot delete a drive with applications."
+        }), 400
+
+    db.session.delete(drive)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Drive deleted successfully."
+    })
+
+@company_bp.route("/drives/<int:id>", methods=["PUT"])
+@jwt_required()
+def edit_drive(id):
+
+    user_id = get_jwt_identity()
+
+    company = CompanyProfile.query.filter_by(
+        user_id=user_id
+    ).first_or_404()
+
+    drive = PlacementDrive.query.filter_by(
+        id=id,
+        company_id=company.id
+    ).first_or_404()
+
+    data = request.get_json()
+
+    drive.job_title = data["job_title"]
+    drive.job_description = data["job_description"]
+    drive.minimum_cgpa = data["minimum_cgpa"]
+    drive.application_deadline = data["application_deadline"]
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Drive updated successfully."
+    })

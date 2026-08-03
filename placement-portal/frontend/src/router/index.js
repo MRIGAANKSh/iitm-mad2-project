@@ -8,6 +8,20 @@ import CompanyDashboard from "../pages/company/Dashboard.vue"
 import CreateDrive from "../pages/company/CreateDrive.vue"
 import Drives from "../pages/company/Drives.vue"
 import Applicants from "../pages/company/Applicants.vue"
+import RegisterStudent from "../pages/RegisterStudent.vue"
+import RegisterCompany from "../pages/RegisterCompany.vue"
+
+import StudentLayout from "../layouts/StudentLayout.vue"
+
+import StudentDashboard from "../pages/student/Dashboard.vue"
+
+import StudentDrives from "../pages/student/Drives.vue"
+
+import Applications from "../pages/student/Applications.vue"
+
+import Profile from "../pages/student/Profile.vue"
+
+import Resume from "../pages/student/Resume.vue"
 
 const routes = [
   {
@@ -45,6 +59,65 @@ const routes = [
         }
 
     ]
+},
+{
+
+path:"/student",
+
+component:StudentLayout,
+
+children:[
+
+{
+
+path:"dashboard",
+
+component:StudentDashboard
+
+},
+
+{
+
+path:"drives",
+
+component:StudentDrives
+
+},
+
+{
+
+path:"applications",
+
+component:Applications
+
+},
+
+{
+
+path:"profile",
+
+component:Profile
+
+},
+
+{
+
+path:"resume",
+
+component:Resume
+
+}
+
+]
+
+},
+{
+    path: "/register/student",
+    component: RegisterStudent
+},
+{
+    path: "/register/company",
+    component: RegisterCompany
 }
 ];
 

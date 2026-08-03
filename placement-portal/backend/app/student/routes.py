@@ -307,3 +307,52 @@ def update_profile():
 
     })
 
+
+
+
+@student_bp.route("/drives", methods=["GET"])
+@jwt_required()
+def get_drives():
+
+    user_id = get_jwt_identity()
+
+    student = StudentProfile.query.filter_by(
+        user_id=user_id
+    ).first_or_404()
+
+    drives = PlacementDrive.query.filter_by(
+        status="approved"
+    ).all()
+
+    result = []
+
+    for drive in drives:
+
+        company = CompanyProfile.query.get(drive.company_id)
+
+        applied = Application.query.filter_by(
+            student_id=student.id,
+            drive_id=drive.id
+        ).first()
+
+        result.append({
+
+            "id": drive.id,
+
+            "company": company.company_name,
+
+            "job_title": drive.job_title,
+
+            "branch": drive.eligibility_branch,
+
+            "cgpa": drive.minimum_cgpa,
+
+            "deadline": str(drive.application_deadline),
+
+            "already_applied": applied is not None
+
+        })
+
+    return jsonify(result)
+
+

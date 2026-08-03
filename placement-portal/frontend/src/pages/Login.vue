@@ -9,19 +9,24 @@
             </h3>
 
             <div class="mb-3">
-              <label>Email</label>
+              <label class="form-label">Email</label>
               <input
+                type="email"
                 v-model="email"
                 class="form-control"
+                placeholder="Enter your email"
+                required
               />
             </div>
 
             <div class="mb-3">
-              <label>Password</label>
+              <label class="form-label">Password</label>
               <input
                 type="password"
                 v-model="password"
                 class="form-control"
+                placeholder="Enter your password"
+                required
               />
             </div>
 
@@ -35,40 +40,94 @@
         </div>
       </div>
     </div>
+
+    <hr class="my-4" />
+
+    <div class="text-center">
+      <p>
+        New Student?
+        <router-link to="/register/student">
+          Register Here
+        </router-link>
+      </p>
+
+      <p>
+        New Company?
+        <router-link to="/register/company">
+          Register Here
+        </router-link>
+      </p>
+    </div>
   </div>
 </template>
-
 <script setup>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import api from "../services/api";
+import { ref } from "vue"
+import { useRouter } from "vue-router"
+import api from "../services/api"
 
-const router = useRouter();
+const router = useRouter()
 
-const email = ref("");
-const password = ref("");
+const email = ref("")
+const password = ref("")
 
-async function login() {
-  try {
-    const response = await api.post("/auth/login", {
-      email: email.value,
-      password: password.value,
-    });
+async function login(){
 
-    localStorage.setItem("token", response.data.access_token);
-    localStorage.setItem("role", response.data.role);
+    try{
 
-    if (response.data.role === "admin") {
-      router.push("/admin/dashboard");
-    } else if (response.data.role === "company") {
-      router.push("/company/dashboard");
-    } else {
-      router.push("/student/dashboard");
+        const response = await api.post("/auth/login",{
+
+            email:email.value,
+
+            password:password.value
+
+        })
+
+        localStorage.setItem(
+            "token",
+            response.data.access_token
+        )
+
+        localStorage.setItem(
+            "role",
+            response.data.role
+        )
+
+        localStorage.setItem(
+            "name",
+            response.data.name
+        )
+
+        if(response.data.role==="admin"){
+
+            router.push("/admin/dashboard")
+
+        }
+
+        else if(response.data.role==="company"){
+
+            router.push("/company/dashboard")
+
+        }
+
+        else{
+
+            router.push("/student/dashboard")
+
+        }
+
     }
-  } catch (error) {
-    alert(
-      error.response?.data?.message || "Login failed"
-    );
-  }
+
+    catch(error){
+
+        alert(
+
+            error.response?.data?.message ||
+
+            "Login Failed"
+
+        )
+
+    }
+
 }
 </script>
