@@ -1,59 +1,109 @@
 <template>
-  <Navbar />
 
-  <div class="container-fluid">
-    <div class="row">
+<nav class="navbar navbar-dark bg-dark">
 
-      <div class="col-md-2 bg-light min-vh-100 pt-3">
+<div class="container-fluid">
 
-        <div class="list-group">
+<span class="navbar-brand">
 
-          <router-link
-            to="/admin/dashboard"
-            class="list-group-item"
-          >
-            Dashboard
-          </router-link>
+Placement Portal - Admin
 
-          <router-link
-            to="/admin/companies"
-            class="list-group-item"
-          >
-            Companies
-          </router-link>
+</span>
 
-          <router-link
-            to="/admin/students"
-            class="list-group-item"
-          >
-            Students
-          </router-link>
+<button
+class="btn btn-danger"
+@click="logout"
+>
 
-          <router-link
-            to="/admin/drives"
-            class="list-group-item"
-          >
-            Placement Drives
-          </router-link>
+Logout
 
-        </div>
+</button>
 
-      </div>
+</div>
 
-      <div class="col-md-10 p-4">
+</nav>
 
-        <router-view />
+<div class="container-fluid">
 
-      </div>
+<div class="row">
 
-    </div>
+<div class="col-md-2 bg-light min-vh-100">
 
-  </div>
+<div class="list-group mt-3">
+
+<router-link
+to="/admin/dashboard"
+class="list-group-item"
+>
+
+Dashboard
+
+</router-link>
+
+<router-link
+to="/admin/students"
+class="list-group-item"
+>
+
+Students
+
+</router-link>
+
+<router-link
+to="/admin/companies"
+class="list-group-item"
+>
+
+Companies
+
+</router-link>
+
+<router-link
+to="/admin/drives"
+class="list-group-item"
+>
+
+Placement Drives
+
+</router-link>
+
+<router-link
+to="/admin/reports"
+class="list-group-item"
+>
+
+Reports
+
+</router-link>
+
+</div>
+
+</div>
+
+<div class="col-md-10 p-4">
+
+<router-view/>
+
+</div>
+
+</div>
+
+</div>
 
 </template>
 
 <script setup>
 
-import Navbar from "../components/Navbar.vue"
+import { useRouter } from "vue-router"
 
-</script>
+const router = useRouter()
+
+function logout(){
+
+localStorage.clear()
+
+router.push("/")
+
+}
+
+</script>   

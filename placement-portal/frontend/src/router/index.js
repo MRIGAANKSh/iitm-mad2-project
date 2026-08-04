@@ -10,6 +10,18 @@ import Drives from "../pages/company/Drives.vue"
 import Applicants from "../pages/company/Applicants.vue"
 import RegisterStudent from "../pages/RegisterStudent.vue"
 import RegisterCompany from "../pages/RegisterCompany.vue"
+import AdminLayout from "../layouts/AdminLayout.vue"
+
+import AdminDashboard from "../pages/admin/Dashboard.vue"
+
+import Students from "../pages/admin/Students.vue"
+
+import Companies from "../pages/admin/Companies.vue"
+
+import Drives from "../pages/admin/Drives.vue"
+
+import Reports from "../pages/admin/Reports.vue"
+
 
 import StudentLayout from "../layouts/StudentLayout.vue"
 
@@ -29,9 +41,55 @@ const routes = [
     component: Login
   },
   {
-    path: "/admin/dashboard",
-    component: AdminDashboard
-  },
+path:"/admin",
+
+component:AdminLayout,
+
+children:[
+
+{
+
+path:"dashboard",
+
+component:AdminDashboard
+
+},
+
+{
+
+path:"students",
+
+component:Students
+
+},
+
+{
+
+path:"companies",
+
+component:Companies
+
+},
+
+{
+
+path:"drives",
+
+component:Drives
+
+},
+
+{
+
+path:"reports",
+
+component:Reports
+
+}
+
+]
+
+}
 
 {
     path: "/company",
