@@ -18,10 +18,8 @@ from app.models import (
     PlacementDrive,
     Application
 )
-
 @student_bp.route("/dashboard")
 @jwt_required()
-@role_required("student")
 def dashboard():
 
     user_id = get_jwt_identity()
@@ -30,41 +28,33 @@ def dashboard():
         user_id=user_id
     ).first_or_404()
 
+    applications = Application.query.filter_by(
+        student_id=student.id
+    ).count()
+
+    selected = Application.query.filter_by(
+        student_id=student.id,
+        status="Selected"
+    ).count()
+
+    shortlisted = Application.query.filter_by(
+        student_id=student.id,
+        status="Shortlisted"
+    ).count()
+
     drives = PlacementDrive.query.filter_by(
         status="approved"
-    ).all()
-
-    data = []
-
-    for drive in drives:
-
-        company = CompanyProfile.query.get(
-            drive.company_id
-        )
-
-        data.append({
-
-            "id": drive.id,
-
-            "company": company.company_name,
-
-            "job_title": drive.job_title,
-
-            "deadline": str(
-                drive.application_deadline
-            ),
-
-            "minimum_cgpa": drive.minimum_cgpa,
-
-            "branch": drive.eligibility_branch
-
-        })
+    ).count()
 
     return jsonify({
 
-        "student": student.student_id,
+        "applications": applications,
 
-        "available_drives": data
+        "selected": selected,
+
+        "shortlisted": shortlisted,
+
+        "drives": drives
 
     })
 
@@ -179,17 +169,15 @@ def apply(id):
 
     }),201
 
-
 @student_bp.route("/applications")
 @jwt_required()
-@role_required("student")
 def applications():
 
     user_id = get_jwt_identity()
 
     student = StudentProfile.query.filter_by(
         user_id=user_id
-    ).first()
+    ).first_or_404()
 
     apps = Application.query.filter_by(
         student_id=student.id
@@ -215,9 +203,7 @@ def applications():
 
             "status": app.status,
 
-            "applied_at": str(
-                app.applied_at
-            )
+            "date": str(app.application_date)
 
         })
 
@@ -309,10 +295,9 @@ def update_profile():
 
 
 
-
-@student_bp.route("/drives", methods=["GET"])
+@student_bp.route("/drives")
 @jwt_required()
-def get_drives():
+def approved_drives():
 
     user_id = get_jwt_identity()
 
@@ -324,18 +309,20 @@ def get_drives():
         status="approved"
     ).all()
 
-    result = []
+    data = []
 
     for drive in drives:
 
-        company = CompanyProfile.query.get(drive.company_id)
+        company = CompanyProfile.query.get(
+            drive.company_id
+        )
 
         applied = Application.query.filter_by(
-            student_id=student.id,
-            drive_id=drive.id
+            drive_id=drive.id,
+            student_id=student.id
         ).first()
 
-        result.append({
+        data.append({
 
             "id": drive.id,
 
@@ -343,16 +330,16 @@ def get_drives():
 
             "job_title": drive.job_title,
 
-            "branch": drive.eligibility_branch,
-
             "cgpa": drive.minimum_cgpa,
 
             "deadline": str(drive.application_deadline),
+
+            "salary": drive.salary,
+
+            "location": drive.location,
 
             "already_applied": applied is not None
 
         })
 
-    return jsonify(result)
-
-
+    return jsonify(data)

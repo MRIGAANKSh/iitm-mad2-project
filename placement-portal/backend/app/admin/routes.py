@@ -13,7 +13,7 @@ from app.models import (
     PlacementDrive,
     Application
 )
-
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 @admin_bp.route("/dashboard")
 @role_required("admin")
@@ -224,4 +224,112 @@ def search_companies():
         })
 
     return jsonify(data)
+
+@admin_bp.route("/companies")
+
+def companies():
+
+    companies = CompanyProfile.query.all()
+
+    result = []
+
+    for company in companies:
+
+        user = User.query.get(company.user_id)
+
+        result.append({
+
+            "id": company.id,
+
+            "company_name": company.company_name,
+
+            "email": user.email,
+
+            "hr_name": company.hr_name,
+
+            "approval_status": company.approval_status,
+
+            "is_active": user.is_active
+
+        })
+
+    return jsonify(result)
+
+
+@admin_bp.route("/drives")
+@jwt_required()
+def get_all_drives():
+
+    drives = PlacementDrive.query.all()
+
+    result = []
+
+    for drive in drives:
+
+        company = CompanyProfile.query.get(drive.company_id)
+
+        result.append({
+
+            "id": drive.id,
+
+            "company": company.company_name,
+
+            "job_title": drive.job_title,
+
+            "deadline": str(drive.application_deadline),
+
+            "status": drive.status,
+
+            "salary": drive.salary,
+
+            "location": drive.location
+
+        })
+
+    return jsonify(result)
+
+
+@admin_bp.route("/drives/<int:id>/approve", methods=["PUT"])
+@jwt_required()
+def approve_drive(id):
+
+    drive = PlacementDrive.query.get_or_404(id)
+
+    drive.status = "approved"
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Drive Approved"
+    })
+
+
+@admin_bp.route("/drives/<int:id>/reject", methods=["PUT"])
+@jwt_required()
+def reject_drive(id):
+
+    drive = PlacementDrive.query.get_or_404(id)
+
+    drive.status = "rejected"
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Drive Rejected"
+    })
+
+
+@admin_bp.route("/drives/<int:id>/close", methods=["PUT"])
+@jwt_required()
+def close_drive(id):
+
+    drive = PlacementDrive.query.get_or_404(id)
+
+    drive.status = "closed"
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Drive Closed"
+    })
 

@@ -1,9 +1,9 @@
 <template>
   <div class="container mt-4">
 
-    <h2 class="mb-4">Create Placement Drive</h2>
+    <h2 class="mb-4">Edit Placement Drive</h2>
 
-    <form @submit.prevent="createDrive">
+    <form @submit.prevent="updateDrive">
 
       <div class="mb-3">
         <label class="form-label">Job Title</label>
@@ -30,11 +30,8 @@
         <div class="col-md-4">
           <label class="form-label">Eligible Branch</label>
           <input
-            type="text"
             class="form-control"
             v-model="form.eligibility_branch"
-            placeholder="CSE"
-            required
           />
         </div>
 
@@ -42,10 +39,8 @@
           <label class="form-label">Minimum CGPA</label>
           <input
             type="number"
-            step="0.01"
             class="form-control"
             v-model="form.minimum_cgpa"
-            required
           />
         </div>
 
@@ -55,7 +50,6 @@
             type="number"
             class="form-control"
             v-model="form.graduation_year"
-            required
           />
         </div>
 
@@ -64,17 +58,16 @@
       <div class="row mt-3">
 
         <div class="col-md-6">
-          <label class="form-label">Application Deadline</label>
+          <label class="form-label">Deadline</label>
           <input
             type="date"
             class="form-control"
             v-model="form.application_deadline"
-            required
           />
         </div>
 
         <div class="col-md-6">
-          <label class="form-label">Salary (LPA)</label>
+          <label class="form-label">Salary</label>
           <input
             type="number"
             class="form-control"
@@ -89,24 +82,24 @@
         <div class="col-md-4">
           <label class="form-label">Location</label>
           <input
-            type="text"
             class="form-control"
             v-model="form.location"
-            placeholder="Bangalore"
           />
         </div>
 
         <div class="col-md-4">
           <label class="form-label">Employment Type</label>
+
           <select
             class="form-select"
             v-model="form.employment_type"
           >
             <option value="">Select</option>
-            <option value="Full Time">Full Time</option>
-            <option value="Internship">Internship</option>
-            <option value="Internship + PPO">Internship + PPO</option>
+            <option>Full Time</option>
+            <option>Internship</option>
+            <option>Internship + PPO</option>
           </select>
+
         </div>
 
         <div class="col-md-4">
@@ -120,8 +113,8 @@
 
       </div>
 
-      <button type="submit" class="btn btn-primary mt-4">
-        Create Drive
+      <button class="btn btn-success mt-4">
+        Update Drive
       </button>
 
     </form>
@@ -130,8 +123,12 @@
 </template>
 
 <script setup>
-import { reactive } from "vue";
+import { reactive, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import api from "../../services/api";
+
+const route = useRoute();
+const router = useRouter();
 
 const form = reactive({
   job_title: "",
@@ -146,25 +143,28 @@ const form = reactive({
   vacancies: ""
 });
 
-async function createDrive() {
-  try {
-    console.log("Sending:", form);
+async function loadDrive() {
 
-    const res = await api.post("/company/drives", form);
+  const res = await api.get(
+    `/company/drives/${route.params.id}`
+  );
 
-    alert(res.data.message);
+  Object.assign(form, res.data);
 
-    Object.keys(form).forEach(key => {
-      form[key] = "";
-    });
-
-  } catch (err) {
-    console.error(err.response?.data || err);
-
-    alert(
-      err.response?.data?.message ||
-      "Failed to create placement drive."
-    );
-  }
 }
+
+async function updateDrive() {
+
+  await api.put(
+    `/company/drives/${route.params.id}`,
+    form
+  );
+
+  alert("Drive Updated Successfully");
+
+  router.push("/company/drives");
+
+}
+
+onMounted(loadDrive);
 </script>

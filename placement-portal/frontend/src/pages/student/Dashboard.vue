@@ -1,6 +1,8 @@
 <template>
 
-<h2>
+<div class="container">
+
+<h2 class="mb-4">
 
 Student Dashboard
 
@@ -8,39 +10,69 @@ Student Dashboard
 
 <div class="row">
 
-<div class="col-md-4">
+<div class="col-md-3">
 
-<DashboardCard
+<div class="card text-center">
 
-title="Applications"
+<div class="card-body">
 
-:value="applications"
+<h5>Available Drives</h5>
 
-/>
-
-</div>
-
-<div class="col-md-4">
-
-<DashboardCard
-
-title="Selected"
-
-:value="selected"
-
-/>
+<h2>{{dashboard.drives}}</h2>
 
 </div>
 
-<div class="col-md-4">
+</div>
 
-<DashboardCard
+</div>
 
-title="Available Drives"
+<div class="col-md-3">
 
-:value="drives"
+<div class="card text-center">
 
-/>
+<div class="card-body">
+
+<h5>Applications</h5>
+
+<h2>{{dashboard.applications}}</h2>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="col-md-3">
+
+<div class="card text-center">
+
+<div class="card-body">
+
+<h5>Shortlisted</h5>
+
+<h2>{{dashboard.shortlisted}}</h2>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="col-md-3">
+
+<div class="card text-center">
+
+<div class="card-body">
+
+<h5>Selected</h5>
+
+<h2>{{dashboard.selected}}</h2>
+
+</div>
+
+</div>
+
+</div>
 
 </div>
 
@@ -50,12 +82,22 @@ title="Available Drives"
 
 <script setup>
 
-import DashboardCard from "../../components/DashboardCard.vue"
+import { ref,onMounted } from "vue"
 
-const applications=0
+import api from "../../services/api"
 
-const selected=0
+const dashboard = ref({})
 
-const drives=0
+async function loadDashboard(){
+
+    const response = await api.get(
+        "/student/dashboard"
+    )
+
+    dashboard.value = response.data
+
+}
+
+onMounted(loadDashboard)
 
 </script>

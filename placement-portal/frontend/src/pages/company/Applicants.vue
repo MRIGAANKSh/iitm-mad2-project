@@ -1,16 +1,18 @@
 <template>
   <div class="container mt-4">
 
-    <h3>Applicants</h3>
+    <h3 class="mb-4">Applicants</h3>
 
-    <table class="table table-bordered">
-      <thead>
+    <table class="table table-bordered table-hover">
+
+      <thead class="table-dark">
         <tr>
           <th>Student</th>
+          <th>Email</th>
           <th>Branch</th>
           <th>CGPA</th>
           <th>Status</th>
-          <th>Action</th>
+          <th width="260">Actions</th>
         </tr>
       </thead>
 
@@ -18,38 +20,54 @@
 
         <tr
           v-for="student in applicants"
-          :key="student.id"
+          :key="student.application_id"
         >
-          <td>{{ student.name }}</td>
+          <td>{{ student.student_name }}</td>
+          <td>{{ student.email }}</td>
           <td>{{ student.branch }}</td>
           <td>{{ student.cgpa }}</td>
-          <td>{{ student.status }}</td>
 
           <td>
+            <span class="badge bg-primary">
+              {{ student.status }}
+            </span>
+          </td>
+
+          <td>
+
             <button
-              class="btn btn-success btn-sm me-2"
-              @click="updateStatus(student.id,'shortlisted')"
+              class="btn btn-warning btn-sm me-2"
+              @click="updateStatus(student.application_id, 'Shortlisted')"
             >
               Shortlist
             </button>
 
             <button
               class="btn btn-danger btn-sm me-2"
-              @click="updateStatus(student.id,'rejected')"
+              @click="updateStatus(student.application_id, 'Rejected')"
             >
               Reject
             </button>
 
             <button
-              class="btn btn-primary btn-sm"
-              @click="updateStatus(student.id,'selected')"
+              class="btn btn-success btn-sm"
+              @click="updateStatus(student.application_id, 'Selected')"
             >
               Select
             </button>
+
+          </td>
+
+        </tr>
+
+        <tr v-if="applicants.length === 0">
+          <td colspan="6" class="text-center">
+            No Applicants Found
           </td>
         </tr>
 
       </tbody>
+
     </table>
 
   </div>
@@ -66,17 +84,43 @@ const route = useRoute();
 const driveId = route.params.id;
 
 async function loadApplicants() {
-  const response = await api.get(`/company/drives/${driveId}/applications`);
-  applicants.value = response.data;
+  if (!driveId) {
+    alert("Invalid Drive ID");
+    return;
+  }
+
+  try {
+    const { data } = await api.get(
+      `/company/drives/${driveId}/applications`
+    );
+
+    applicants.value = data;
+  } catch (err) {
+    console.error(err);
+    alert(err.response?.data?.message || "Failed to load applicants.");
+  }
 }
 
-async function updateStatus(id, status) {
-  await api.put(`/company/applications/${id}`, {
-    status,
-  });
+async function updateStatus(applicationId, status) {
+  try {
+    const { data } = await api.put(
+      `/company/applications/${applicationId}/status`,
+      {
+        status,
+      }
+    );
 
+    alert(data.message);
+
+    await loadApplicants();
+  } catch (err) {
+    console.error(err);
+    alert(err.response?.data?.message || "Failed to update status.");
+  }
+}
+
+onMounted(() => {
+  console.log("Drive ID:", driveId);
   loadApplicants();
-}
-
-onMounted(loadApplicants);
+});
 </script>
