@@ -23,6 +23,7 @@ import CreateDrive from "../pages/company/CreateDrive.vue";
 import Drives from "../pages/company/Drives.vue";
 import Applicants from "../pages/company/Applicants.vue";
 import EditDrive from "../pages/company/EditDrives.vue";
+import DriveApplicants from "../pages/company/DriveApplicants.vue"
 
 // Student
 import StudentDashboard from "../pages/student/Dashboard.vue";
@@ -102,7 +103,7 @@ const routes = [
     // Applicants of ONE particular drive
     {
       path: "drives/:id/applicants",
-      component: Applicants,
+      component: DriveApplicants,
     },
 
     {

@@ -1,7 +1,7 @@
 
 <template>
 
-  <div class="container-fluid">
+  <div>
 
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -54,6 +54,7 @@
     <!-- Applicants -->
     <div v-else>
 
+      <!-- No Applicants -->
       <div
         v-if="applicants.length === 0"
         class="alert alert-info"
@@ -62,12 +63,15 @@
       </div>
 
 
+      <!-- Applicants Table -->
       <div
         v-else
         class="table-responsive"
       >
 
-        <table class="table table-bordered table-hover align-middle">
+        <table
+          class="table table-bordered table-hover align-middle"
+        >
 
           <thead class="table-dark">
 
@@ -138,7 +142,7 @@
 
                 <a
                   v-if="student.resume"
-                  :href="student.resume"
+                  :href="getResumeUrl(student.resume)"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="btn btn-outline-primary btn-sm"
@@ -241,15 +245,51 @@ const router = useRouter()
 
 const applicants = ref([])
 
-const loading = ref(false)
+const loading = ref(true)
 
 const error = ref("")
 
 
-// ========================================
-// LOAD ALL COMPANY APPLICANTS
-// ========================================
+/*
+  Flask backend URL
 
+  Your backend:
+  http://127.0.0.1:5000
+
+  Resume route:
+  /uploads/<filename>
+*/
+const BACKEND_URL = "http://127.0.0.1:5000"
+
+
+/*
+  Convert stored filename into
+  complete Flask resume URL.
+
+  Example:
+
+  student.resume
+  =
+  "Mrigaank_Resume.pdf"
+
+  becomes:
+
+  http://127.0.0.1:5000/uploads/Mrigaank_Resume.pdf
+*/
+function getResumeUrl(filename) {
+
+  if (!filename) {
+    return ""
+  }
+
+  return `${BACKEND_URL}/uploads/${encodeURIComponent(filename)}`
+}
+
+
+/*
+  Load ALL applicants belonging
+  to the logged-in company.
+*/
 async function loadApplicants() {
 
   loading.value = true
@@ -258,29 +298,13 @@ async function loadApplicants() {
 
   try {
 
-    /*
-      IMPORTANT:
-
-      This is NOT:
-
-      /company/drives/:id/applications
-
-      because this page is for ALL applicants.
-
-      We use:
-
-      /company/applications
-    */
-
     const response = await api.get(
       "/company/applications"
     )
 
     applicants.value = response.data || []
 
-  }
-
-  catch (err) {
+  } catch (err) {
 
     console.error(
       "Failed to load applicants:",
@@ -291,9 +315,7 @@ async function loadApplicants() {
       err.response?.data?.message ||
       "Failed to load applicants."
 
-  }
-
-  finally {
+  } finally {
 
     loading.value = false
 
@@ -302,10 +324,9 @@ async function loadApplicants() {
 }
 
 
-// ========================================
-// UPDATE STATUS
-// ========================================
-
+/*
+  Update application status
+*/
 async function updateStatus(
   applicationId,
   status
@@ -320,11 +341,14 @@ async function updateStatus(
       }
     )
 
-    // Update UI immediately
+    /*
+      Update the row immediately
+      instead of reloading the entire page.
+    */
     const applicant =
       applicants.value.find(
-        item =>
-          item.application_id === applicationId
+        student =>
+          student.application_id === applicationId
       )
 
     if (applicant) {
@@ -333,12 +357,10 @@ async function updateStatus(
 
     }
 
-  }
-
-  catch (err) {
+  } catch (err) {
 
     console.error(
-      "Status update failed:",
+      "Failed to update status:",
       err
     )
 
@@ -352,22 +374,21 @@ async function updateStatus(
 }
 
 
-// ========================================
-// STATUS BADGE
-// ========================================
-
+/*
+  Bootstrap badge classes
+*/
 function getStatusClass(status) {
 
   switch (status) {
 
-    case "Shortlisted":
-      return "bg-warning text-dark"
+    case "Selected":
+      return "bg-success"
 
     case "Rejected":
       return "bg-danger"
 
-    case "Selected":
-      return "bg-success"
+    case "Shortlisted":
+      return "bg-warning text-dark"
 
     case "Applied":
       return "bg-primary"
@@ -380,23 +401,23 @@ function getStatusClass(status) {
 }
 
 
-// ========================================
-// BACK TO DRIVES
-// ========================================
-
+/*
+  Back to company drives
+*/
 function goBack() {
 
-  router.push("/company/drives")
+  router.push(
+    "/company/drives"
+  )
 
 }
 
 
-// ========================================
-// LOAD WHEN PAGE OPENS
-// ========================================
-
+/*
+  Load applicants when page opens
+*/
 onMounted(() => {
-
+ 
   loadApplicants()
 
 })

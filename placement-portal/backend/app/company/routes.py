@@ -373,13 +373,16 @@ def all_applicants():
 # =========================================================
 # GET APPLICANTS FOR A SPECIFIC DRIVE
 # =========================================================
+# =========================================================
+# GET APPLICANTS FOR A SPECIFIC DRIVE
+# =========================================================
 
 @company_bp.route(
-    "/drives/<int:id>/applications",
+    "/drives/<int:drive_id>/applicants",
     methods=["GET"]
 )
 @jwt_required()
-def applicants(id):
+def drive_applicants(drive_id):
 
     user_id = get_jwt_identity()
 
@@ -388,39 +391,51 @@ def applicants(id):
         user_id=user_id
     ).first_or_404()
 
-    # Make sure this drive belongs to this company
+
+    # Make sure the drive belongs to this company
     drive = PlacementDrive.query.filter_by(
-        id=id,
+        id=drive_id,
         company_id=company.id
     ).first()
 
+
     if not drive:
+
         return jsonify({
             "message": "Drive not found or does not belong to this company."
         }), 404
 
-    # Get all applications for this drive
+
+    # Get applications ONLY for this drive
     applications = Application.query.filter_by(
         drive_id=drive.id
     ).all()
 
+
     data = []
+
 
     for app in applications:
 
+        # Get student profile
         student = StudentProfile.query.get(
             app.student_id
         )
 
+
         if not student:
             continue
 
+
+        # Get user
         user = User.query.get(
             student.user_id
         )
 
+
         if not user:
             continue
+
 
         data.append({
 
@@ -438,15 +453,14 @@ def applicants(id):
 
             "cgpa": student.cgpa,
 
-            "status": app.status,
+            "resume": student.resume,
 
-            # Resume
-            "resume": student.resume
+            "status": app.status
 
         })
 
-    return jsonify(data), 200
 
+    return jsonify(data), 200
 
 # =========================================================
 # UPDATE APPLICATION STATUS

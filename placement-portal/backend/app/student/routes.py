@@ -263,6 +263,43 @@ def history():
 
     return jsonify(data)
 
+
+@student_bp.route("/profile", methods=["GET"])
+@jwt_required()
+@role_required("student")
+def get_profile():
+
+    user_id = get_jwt_identity()
+
+    student = StudentProfile.query.filter_by(
+        user_id=user_id
+    ).first_or_404()
+
+    user = User.query.get(student.user_id)
+
+    if not user:
+        return jsonify({
+            "message": "User not found."
+        }), 404
+
+    return jsonify({
+
+        "name": user.name,
+
+        "email": user.email,
+
+        "phone": student.phone,
+
+        "branch": student.branch,
+
+        "cgpa": student.cgpa,
+
+        "resume": student.resume
+
+    }), 200
+
+
+
 @student_bp.route(
     "/profile",
     methods=["PUT"]
@@ -302,8 +339,6 @@ def update_profile():
 
     })
 
-
-
 @student_bp.route("/drives")
 @jwt_required()
 def approved_drives():
@@ -314,9 +349,37 @@ def approved_drives():
         user_id=user_id
     ).first_or_404()
 
-    drives = PlacementDrive.query.filter_by(
+    search = request.args.get("search", "")
+    branch = request.args.get("branch", "")
+    min_cgpa = request.args.get("min_cgpa", type=float)
+
+    query = PlacementDrive.query.filter_by(
         status="approved"
-    ).all()
+    )
+
+    # Search by job title
+    if search:
+        query = query.filter(
+            PlacementDrive.job_title.ilike(
+                f"%{search}%"
+            )
+        )
+
+    # Branch filtering
+    if branch:
+        query = query.filter(
+            PlacementDrive.eligibility_branch.ilike(
+                f"%{branch}%"
+            )
+        )
+
+    # CGPA filtering
+    if min_cgpa is not None:
+        query = query.filter(
+            PlacementDrive.minimum_cgpa <= min_cgpa
+        )
+
+    drives = query.all()
 
     data = []
 
@@ -339,20 +402,38 @@ def approved_drives():
 
             "job_title": drive.job_title,
 
-            "cgpa": drive.minimum_cgpa,
+            "job_description": drive.job_description,
 
-            "deadline": str(drive.application_deadline),
+            "eligibility_branch":
+                drive.eligibility_branch,
 
-            "salary": drive.salary,
+            "minimum_cgpa":
+                drive.minimum_cgpa,
 
-            "location": drive.location,
+            "graduation_year":
+                drive.graduation_year,
 
-            "already_applied": applied is not None
+            "deadline":
+                str(drive.application_deadline),
+
+            "salary":
+                drive.salary,
+
+            "location":
+                drive.location,
+
+            "employment_type":
+                drive.employment_type,
+
+            "vacancies":
+                drive.vacancies,
+
+            "already_applied":
+                applied is not None
 
         })
 
     return jsonify(data)
-
 
 @student_bp.route(
     "/upload-resume",
@@ -368,23 +449,33 @@ def upload_resume():
     ).first_or_404()
 
     if "resume" not in request.files:
-
         return jsonify({
-            "message":"No file selected."
-        }),400
+            "message": "No file selected."
+        }), 400
 
     file = request.files["resume"]
 
     if file.filename == "":
-
         return jsonify({
-            "message":"Invalid file."
-        }),400
+            "message": "Invalid file."
+        }), 400
 
-    filename = secure_filename(file.filename)
+    upload_folder = current_app.config[
+        "UPLOAD_FOLDER"
+    ]
+
+    # Make sure uploads directory exists
+    os.makedirs(
+        upload_folder,
+        exist_ok=True
+    )
+
+    filename = secure_filename(
+        file.filename
+    )
 
     filepath = os.path.join(
-        current_app.config["UPLOAD_FOLDER"],
+        upload_folder,
         filename
     )
 
@@ -395,12 +486,13 @@ def upload_resume():
     db.session.commit()
 
     return jsonify({
+        "message":
+            "Resume uploaded successfully.",
+        "filename":
+            filename
+    }), 200
 
-        "message":"Resume uploaded successfully.",
 
-        "filename":filename
-
-    })
 
 
 @student_bp.route("/resume")

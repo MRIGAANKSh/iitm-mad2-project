@@ -1,118 +1,228 @@
 <template>
-  <div class="container mt-4">
 
-    <h2 class="mb-4">Placement Drives</h2>
+<div class="container">
 
-    <input
-      class="form-control mb-3"
-      placeholder="Search Job Title..."
-      v-model="search"
-    />
+    <h2 class="mb-4">
+        Placement Drives
+    </h2>
 
-    <table class="table table-bordered table-hover">
+    <!-- Search -->
 
-      <thead class="table-dark">
-        <tr>
-          <th>Company</th>
-          <th>Job Title</th>
-          <th>Branch</th>
-          <th>Minimum CGPA</th>
-          <th>Deadline</th>
-          <th>Action</th>
-        </tr>
-      </thead>
+    <div class="row mb-4">
 
-      <tbody>
+        <div class="col-md-5">
 
-        <tr
-          v-for="drive in filteredDrives"
-          :key="drive.id"
+            <input
+                v-model="search"
+                @input="loadDrives"
+                class="form-control"
+                placeholder="Search job title..."
+            >
+
+        </div>
+
+        <div class="col-md-3">
+
+            <input
+                v-model="branch"
+                @input="loadDrives"
+                class="form-control"
+                placeholder="Branch"
+            >
+
+        </div>
+
+        <div class="col-md-3">
+
+            <input
+                v-model="cgpa"
+                @input="loadDrives"
+                type="number"
+                step="0.1"
+                class="form-control"
+                placeholder="CGPA"
+            >
+
+        </div>
+
+    </div>
+
+
+    <!-- Drives -->
+
+    <div
+        v-if="drives.length === 0"
+        class="alert alert-info"
+    >
+
+        No placement drives found.
+
+    </div>
+
+
+    <div class="row">
+
+        <div
+            v-for="drive in drives"
+            :key="drive.id"
+            class="col-md-6 mb-4"
         >
-          <td>{{ drive.company }}</td>
-          <td>{{ drive.job_title }}</td>
-          <td>{{ drive.eligibility_branch }}</td>
-          <td>{{ drive.cgpa }}</td>
-          <td>{{ drive.deadline }}</td>
 
-          <td>
+            <div class="card shadow h-100">
 
-            <button
-              v-if="!drive.already_applied"
-              class="btn btn-primary btn-sm"
-              @click="apply(drive.id)"
-            >
-              Apply
-            </button>
+                <div class="card-body">
 
-            <span
-              v-else
-              class="badge bg-success"
-            >
-              Applied
-            </span>
+                    <h4>
+                        {{ drive.job_title }}
+                    </h4>
 
-          </td>
+                    <h6 class="text-primary">
+                        {{ drive.company }}
+                    </h6>
 
-        </tr>
+                    <hr>
 
-        <tr v-if="filteredDrives.length === 0">
-          <td colspan="6" class="text-center">
-            No Placement Drives Found
-          </td>
-        </tr>
+                    <p>
+                        {{ drive.job_description }}
+                    </p>
 
-      </tbody>
+                    <p>
+                        <strong>Branch:</strong>
+                        {{ drive.eligibility_branch }}
+                    </p>
 
-    </table>
+                    <p>
+                        <strong>Minimum CGPA:</strong>
+                        {{ drive.minimum_cgpa }}
+                    </p>
 
-  </div>
+                    <p>
+                        <strong>Graduation Year:</strong>
+                        {{ drive.graduation_year }}
+                    </p>
+
+                    <p>
+                        <strong>Salary:</strong>
+                        {{ drive.salary || "Not specified" }}
+                    </p>
+
+                    <p>
+                        <strong>Location:</strong>
+                        {{ drive.location || "Not specified" }}
+                    </p>
+
+                    <p>
+                        <strong>Deadline:</strong>
+                        {{ drive.deadline }}
+                    </p>
+
+                    <button
+                        v-if="!drive.already_applied"
+                        class="btn btn-primary"
+                        @click="apply(drive.id)"
+                    >
+
+                        Apply
+
+                    </button>
+
+                    <button
+                        v-else
+                        class="btn btn-secondary"
+                        disabled
+                    >
+
+                        Already Applied
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
 </template>
 
+
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import api from "../../services/api";
 
-const drives = ref([]);
-const search = ref("");
+import { ref, onMounted } from "vue"
 
-const filteredDrives = computed(() => {
-  return drives.value.filter((drive) =>
-    drive.job_title
-      .toLowerCase()
-      .includes(search.value.toLowerCase())
-  );
-});
+import api from "../../services/api"
 
-async function loadDrives() {
-  try {
-    const response = await api.get("/student/drives");
-    drives.value = response.data;
-  } catch (err) {
-    console.error(err);
-    alert("Failed to load drives.");
-  }
+const drives = ref([])
+
+const search = ref("")
+
+const branch = ref("")
+
+const cgpa = ref("")
+
+
+async function loadDrives(){
+
+    try{
+
+        const response = await api.get(
+            "/student/drives",
+            {
+                params: {
+
+                    search: search.value,
+
+                    branch: branch.value,
+
+                    min_cgpa:
+                        cgpa.value || undefined
+
+                }
+            }
+        )
+
+        drives.value = response.data
+
+    }
+
+    catch(error){
+
+        console.error(error)
+
+    }
+
 }
 
-async function apply(id) {
-  try {
-    const response = await api.post(
-      `/student/drives/${id}/apply`
-    );
 
-    alert(response.data.message);
+async function apply(id){
 
-    await loadDrives();
-  } catch (err) {
-    console.error(err);
+    try{
 
-    alert(
-      err.response?.data?.message ||
-      "Application failed."
-    );
-  }
+        const response = await api.post(
+            `/student/drives/${id}/apply`
+        )
+
+        alert(response.data.message)
+
+        loadDrives()
+
+    }
+
+    catch(error){
+
+        alert(
+            error.response?.data?.message ||
+            "Unable to apply."
+        )
+
+    }
+
 }
 
-onMounted(() => {
-  loadDrives();
-});
+
+onMounted(loadDrives)
+
 </script>
