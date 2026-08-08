@@ -14,3 +14,10 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     JWT_SECRET_KEY = "placement-portal-jwt-secret"
+
+    UPLOAD_FOLDER = os.path.join(
+    os.getcwd(),
+    "uploads"
+        )
+
+    MAX_CONTENT_LENGTH = 5 * 1024 * 1024

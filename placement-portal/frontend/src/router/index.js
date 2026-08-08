@@ -10,21 +10,21 @@ import AdminLayout from "../layouts/AdminLayout.vue";
 import CompanyLayout from "../layouts/CompanyLayout.vue";
 import StudentLayout from "../layouts/StudentLayout.vue";
 
-// Admin Pages
+// Admin
 import AdminDashboard from "../pages/admin/Dashboard.vue";
 import Students from "../pages/admin/Students.vue";
 import Companies from "../pages/admin/Companies.vue";
 import AdminDrives from "../pages/admin/Drives.vue";
 import Reports from "../pages/admin/Reports.vue";
 
-// Company Pages
+// Company
 import CompanyDashboard from "../pages/company/Dashboard.vue";
 import CreateDrive from "../pages/company/CreateDrive.vue";
 import Drives from "../pages/company/Drives.vue";
 import Applicants from "../pages/company/Applicants.vue";
 import EditDrive from "../pages/company/EditDrives.vue";
 
-// Student Pages
+// Student
 import StudentDashboard from "../pages/student/Dashboard.vue";
 import StudentDrives from "../pages/student/Drives.vue";
 import Applications from "../pages/student/Applications.vue";
@@ -32,15 +32,20 @@ import Profile from "../pages/student/Profile.vue";
 import Resume from "../pages/student/Resume.vue";
 
 const routes = [
+
+  // Login
   {
     path: "/",
     component: Login,
   },
 
-  // Admin Routes
+  // =========================
+  // ADMIN
+  // =========================
   {
     path: "/admin",
     component: AdminLayout,
+
     children: [
       {
         path: "dashboard",
@@ -65,38 +70,56 @@ const routes = [
     ],
   },
 
-  // Company Routes
-  {
-    path: "/company",
-    component: CompanyLayout,
-    children: [
-      {
-        path: "dashboard",
-        component: CompanyDashboard,
-      },
-      {
-        path: "create-drive",
-        component: CreateDrive,
-      },
-      {
-        path: "drives",
-        component: Drives,
-      },
-      {
-        path: "applicants",
-        component: Applicants,
-      },
-      {
-    path: "edit-drive/:id",
-    component: EditDrive
-}
-    ],
-  },
+  // =========================
+  // COMPANY
+  // =========================
+// Company Routes
+{
+  path: "/company",
+  component: CompanyLayout,
+  children: [
+    {
+      path: "dashboard",
+      component: CompanyDashboard,
+    },
 
-  // Student Routes
+    {
+      path: "create-drive",
+      component: CreateDrive,
+    },
+
+    {
+      path: "drives",
+      component: Drives,
+    },
+
+    // ALL applicants of the company
+    {
+      path: "applicants",
+      component: Applicants,
+    },
+
+    // Applicants of ONE particular drive
+    {
+      path: "drives/:id/applicants",
+      component: Applicants,
+    },
+
+    {
+      path: "edit-drive/:id",
+      component: EditDrive,
+    },
+  ],
+},
+
+
+  // =========================
+  // STUDENT
+  // =========================
   {
     path: "/student",
     component: StudentLayout,
+
     children: [
       {
         path: "dashboard",
@@ -126,10 +149,12 @@ const routes = [
     path: "/register/student",
     component: RegisterStudent,
   },
+
   {
     path: "/register/company",
     component: RegisterCompany,
   },
+
 ];
 
 const router = createRouter({

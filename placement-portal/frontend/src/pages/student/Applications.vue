@@ -1,74 +1,251 @@
+
 <template>
 
-<div class="container">
+  <div class="container">
 
-<h2 class="mb-4">
+    <!-- Page Title -->
+    <h2 class="mb-4">
+      My Applications
+    </h2>
 
-My Applications
 
-</h2>
+    <!-- Loading -->
+    <div
+      v-if="loading"
+      class="text-center py-5"
+    >
 
-<table class="table table-bordered">
+      <div
+        class="spinner-border text-primary"
+        role="status"
+      ></div>
 
-<thead class="table-dark">
+      <p class="mt-2">
+        Loading applications...
+      </p>
 
-<tr>
+    </div>
 
-<th>Company</th>
 
-<th>Job</th>
+    <!-- Error -->
+    <div
+      v-else-if="error"
+      class="alert alert-danger"
+    >
+      {{ error }}
+    </div>
 
-<th>Status</th>
 
-<th>Date</th>
+    <!-- Applications -->
+    <div v-else>
 
-</tr>
+      <!-- No Applications -->
+      <div
+        v-if="applications.length === 0"
+        class="alert alert-info"
+      >
+        You have not applied to any placement drives yet.
+      </div>
 
-</thead>
 
-<tbody>
+      <!-- Applications Table -->
+      <div
+        v-else
+        class="table-responsive"
+      >
 
-<tr
-v-for="app in applications"
-:key="app.date + app.company"
->
+        <table class="table table-bordered table-hover">
 
-<td>{{app.company}}</td>
+          <thead class="table-dark">
 
-<td>{{app.job_title}}</td>
+            <tr>
 
-<td>{{app.status}}</td>
+              <th>
+                Company
+              </th>
 
-<td>{{app.date}}</td>
+              <th>
+                Job
+              </th>
 
-</tr>
+              <th>
+                Status
+              </th>
 
-</tbody>
+              <th>
+                Applied Date
+              </th>
 
-</table>
+            </tr>
 
-</div>
+          </thead>
+
+
+          <tbody>
+
+            <tr
+              v-for="(app, index) in applications"
+              :key="index"
+            >
+
+              <!-- Company -->
+              <td>
+                {{ app.company || "N/A" }}
+              </td>
+
+
+              <!-- Job -->
+              <td>
+                {{ app.job_title || "N/A" }}
+              </td>
+
+
+              <!-- Status -->
+              <td>
+
+                <span
+                  class="badge"
+                  :class="getStatusClass(app.status)"
+                >
+                  {{ app.status || "Applied" }}
+                </span>
+
+              </td>
+
+
+              <!-- Date -->
+              <td>
+                {{ app.date || "N/A" }}
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
 
 </template>
 
+
 <script setup>
 
-import { ref,onMounted } from "vue"
+import { ref, onMounted } from "vue"
 
 import api from "../../services/api"
 
+
+// Applications
 const applications = ref([])
 
-async function loadApplications(){
 
-const response = await api.get(
-"/student/applications"
-)
+// Loading state
+const loading = ref(true)
 
-applications.value = response.data
+
+// Error state
+const error = ref("")
+
+
+// Status badge
+function getStatusClass(status) {
+
+  switch (status) {
+
+    case "Selected":
+      return "bg-success"
+
+    case "Shortlisted":
+      return "bg-warning text-dark"
+
+    case "Rejected":
+      return "bg-danger"
+
+    case "Applied":
+      return "bg-primary"
+
+    default:
+      return "bg-secondary"
+
+  }
 
 }
 
-onMounted(loadApplications)
+
+// Load applications
+async function loadApplications() {
+
+  loading.value = true
+
+  error.value = ""
+
+  try {
+
+    const response = await api.get(
+      "/student/applications"
+    )
+
+
+    console.log(
+      "Student Applications:",
+      response.data
+    )
+
+
+    // Make sure response is an array
+    if (Array.isArray(response.data)) {
+
+      applications.value = response.data
+
+    } else {
+
+      applications.value = []
+
+      error.value =
+        "Invalid applications response from server."
+
+    }
+
+  } catch (err) {
+
+    console.error(
+      "Failed to load applications:",
+      err
+    )
+
+
+    if (err.response) {
+
+      error.value =
+        err.response.data?.message ||
+        `Failed to load applications (${err.response.status})`
+
+    } else {
+
+      error.value =
+        "Unable to connect to the server."
+
+    }
+
+  } finally {
+
+    loading.value = false
+
+  }
+
+}
+
+
+onMounted(() => {
+
+  loadApplications()
+
+})
 
 </script>
+

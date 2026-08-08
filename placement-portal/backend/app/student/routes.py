@@ -1,5 +1,9 @@
 from flask import jsonify, request
+import os
 
+from werkzeug.utils import secure_filename
+
+from flask import current_app
 from flask_jwt_extended import (
     jwt_required,
     get_jwt_identity
@@ -168,7 +172,6 @@ def apply(id):
         "message":"Application submitted."
 
     }),201
-
 @student_bp.route("/applications")
 @jwt_required()
 def applications():
@@ -191,9 +194,15 @@ def applications():
             app.drive_id
         )
 
+        if not drive:
+            continue
+
         company = CompanyProfile.query.get(
             drive.company_id
         )
+
+        if not company:
+            continue
 
         result.append({
 
@@ -203,12 +212,12 @@ def applications():
 
             "status": app.status,
 
-            "date": str(app.application_date)
+            # FIX: use applied_at
+            "date": str(app.applied_at)
 
         })
 
-    return jsonify(result)
-
+    return jsonify(result), 200
 @student_bp.route("/history")
 @jwt_required()
 @role_required("student")
@@ -343,3 +352,69 @@ def approved_drives():
         })
 
     return jsonify(data)
+
+
+@student_bp.route(
+    "/upload-resume",
+    methods=["POST"]
+)
+@jwt_required()
+def upload_resume():
+
+    user_id = get_jwt_identity()
+
+    student = StudentProfile.query.filter_by(
+        user_id=user_id
+    ).first_or_404()
+
+    if "resume" not in request.files:
+
+        return jsonify({
+            "message":"No file selected."
+        }),400
+
+    file = request.files["resume"]
+
+    if file.filename == "":
+
+        return jsonify({
+            "message":"Invalid file."
+        }),400
+
+    filename = secure_filename(file.filename)
+
+    filepath = os.path.join(
+        current_app.config["UPLOAD_FOLDER"],
+        filename
+    )
+
+    file.save(filepath)
+
+    student.resume = filename
+
+    db.session.commit()
+
+    return jsonify({
+
+        "message":"Resume uploaded successfully.",
+
+        "filename":filename
+
+    })
+
+
+@student_bp.route("/resume")
+@jwt_required()
+def get_resume():
+
+    user_id = get_jwt_identity()
+
+    student = StudentProfile.query.filter_by(
+        user_id=user_id
+    ).first_or_404()
+
+    return jsonify({
+
+        "resume":student.resume
+
+    })
