@@ -8,51 +8,7 @@
       </div>
     </div>
 
-    <!-- Pending Companies -->
-    <h4 class="mt-5">Pending Companies</h4>
-
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>HR</th>
-          <th>Website</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <tr
-          v-for="company in companies"
-          :key="company.id"
-        >
-          <td>{{ company.company_name }}</td>
-          <td>{{ company.hr_name }}</td>
-          <td>{{ company.website }}</td>
-          <td>
-            <button
-              class="btn btn-success btn-sm me-2"
-              @click="approve(company.id)"
-            >
-              Approve
-            </button>
-
-            <button
-              class="btn btn-danger btn-sm"
-              @click="reject(company.id)"
-            >
-              Reject
-            </button>
-          </td>
-        </tr>
-
-        <tr v-if="companies.length === 0">
-          <td colspan="4" class="text-center">
-            No pending companies
-          </td>
-        </tr>
-      </tbody>
-    </table>
+   
   </div>
 </template>
 

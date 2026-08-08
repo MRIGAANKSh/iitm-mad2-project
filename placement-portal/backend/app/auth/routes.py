@@ -147,6 +147,15 @@ def login():
         return jsonify({
             "message":"Invalid email or password."
         }),401
+    if not user.is_active:
+
+        return jsonify({
+
+        "message":
+            "Your account has been deactivated."
+
+        }), 403
+
 
     if not check_password_hash(
         user.password,

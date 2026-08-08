@@ -1,142 +1,327 @@
 <template>
-<div class="container">
 
-<h2 class="mb-4">Manage Companies</h2>
+  <div class="container mt-4">
 
-<table class="table table-bordered table-hover">
+    <div class="d-flex justify-content-between align-items-center mb-4">
 
-<thead class="table-dark">
+      <h2>Companies</h2>
 
-<tr>
+      <div class="d-flex gap-2">
 
-<th>Company</th>
-<th>Email</th>
-<th>HR</th>
-<th>Status</th>
-<th>Action</th>
+        <input
+          v-model="search"
+          type="text"
+          class="form-control"
+          placeholder="Search companies..."
+          @keyup.enter="searchCompanies"
+        />
 
-</tr>
+        <button
+          class="btn btn-primary"
+          @click="searchCompanies"
+        >
+          Search
+        </button>
 
-</thead>
+      </div>
 
-<tbody>
+    </div>
 
-<tr
-v-for="company in companies"
-:key="company.id"
->
 
-<td>{{ company.company_name }}</td>
+    <div class="card shadow-sm">
 
-<td>{{ company.email }}</td>
+      <div class="card-body">
 
-<td>{{ company.hr_name }}</td>
+        <div class="table-responsive">
 
-<td>
+          <table class="table table-hover">
 
-<span
-class="badge"
-:class="{
-'bg-warning': company.approval_status=='pending',
-'bg-success': company.approval_status=='approved',
-'bg-danger': company.approval_status=='rejected'
-}"
->
+            <thead>
 
-{{ company.approval_status }}
+              <tr>
 
-</span>
+                <th>Company</th>
 
-</td>
+                <th>Email</th>
 
-<td>
+                <th>HR</th>
 
-<button
-class="btn btn-success btn-sm me-2"
-@click="approve(company.id)"
->
+                <th>Approval</th>
 
-Approve
+                <th>Account</th>
 
-</button>
+                <th>Actions</th>
 
-<button
-class="btn btn-warning btn-sm me-2"
-@click="reject(company.id)"
->
+              </tr>
 
-Reject
+            </thead>
 
-</button>
 
-<button
-class="btn btn-danger btn-sm"
-@click="blacklist(company.id)"
->
+            <tbody>
 
-Blacklist
+              <tr
+                v-for="company in companies"
+                :key="company.id"
+              >
 
-</button>
+                <td>
+                  {{ company.company_name }}
+                </td>
 
-</td>
+                <td>
+                  {{ company.email }}
+                </td>
 
-</tr>
+                <td>
+                  {{ company.hr_name || "-" }}
+                </td>
 
-</tbody>
+                <td>
 
-</table>
+                  <span
+                    class="badge"
+                    :class="
+                      company.approval_status === 'approved'
+                        ? 'bg-success'
+                        : 'bg-warning text-dark'
+                    "
+                  >
+                    {{ company.approval_status }}
+                  </span>
 
-</div>
+                </td>
+
+                <td>
+
+                  <span
+                    v-if="company.is_active"
+                    class="badge bg-success"
+                  >
+                    Active
+                  </span>
+
+                  <span
+                    v-else
+                    class="badge bg-danger"
+                  >
+                    Inactive
+                  </span>
+
+                </td>
+
+                <td>
+
+                  <button
+                    v-if="company.is_active"
+                    class="btn btn-sm btn-warning me-1"
+                    @click="deactivateCompany(company.id)"
+                  >
+                    Deactivate
+                  </button>
+
+                  <button
+                    v-else
+                    class="btn btn-sm btn-success me-1"
+                    @click="activateCompany(company.id)"
+                  >
+                    Activate
+                  </button>
+
+
+                  <button
+                    v-if="!company.is_blacklisted"
+                    class="btn btn-sm btn-danger"
+                    @click="blacklistCompany(company.id)"
+                  >
+                    Blacklist
+                  </button>
+
+                  <button
+                    v-else
+                    class="btn btn-sm btn-secondary"
+                    @click="unblacklistCompany(company.id)"
+                  >
+                    Remove Blacklist
+                  </button>
+
+                </td>
+
+              </tr>
+
+
+              <tr v-if="companies.length === 0">
+
+                <td
+                  colspan="6"
+                  class="text-center text-muted"
+                >
+
+                  No companies found.
+
+                </td>
+
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
 </template>
+
 
 <script setup>
 
-import { ref,onMounted } from "vue"
+import { ref, onMounted } from "vue";
 
-import api from "../../services/api"
+import api from "../../services/api";
 
-const companies = ref([])
 
-async function loadCompanies(){
+const companies = ref([]);
+
+const search = ref("");
+
+
+async function searchCompanies() {
+
+  try {
 
     const response = await api.get(
-        "/admin/companies"
-    )
+      "/admin/companies/search",
+      {
+        params: {
+          q: search.value
+        }
+      }
+    );
 
-    companies.value = response.data
+    companies.value = response.data;
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      error?.response?.data?.message ||
+      "Failed to load companies."
+    );
+
+  }
 
 }
 
-async function approve(id){
+
+async function deactivateCompany(id) {
+
+  if (!confirm(
+    "Deactivate this company?"
+  )) {
+    return;
+  }
+
+  try {
 
     await api.put(
-        `/admin/companies/${id}/approve`
-    )
+      `/admin/companies/${id}/deactivate`
+    );
 
-    loadCompanies()
+    await searchCompanies();
+
+  } catch (error) {
+
+    alert(
+      error?.response?.data?.message ||
+      "Failed to deactivate company."
+    );
+
+  }
 
 }
 
-async function reject(id){
+
+async function activateCompany(id) {
+
+  try {
 
     await api.put(
-        `/admin/companies/${id}/reject`
-    )
+      `/admin/companies/${id}/activate`
+    );
 
-    loadCompanies()
+    await searchCompanies();
+
+  } catch (error) {
+
+    alert(
+      error?.response?.data?.message ||
+      "Failed to activate company."
+    );
+
+  }
 
 }
 
-async function blacklist(id){
+
+async function blacklistCompany(id) {
+
+  if (!confirm(
+    "Blacklist this company?"
+  )) {
+    return;
+  }
+
+  try {
 
     await api.put(
-        `/admin/companies/${id}/blacklist`
-    )
+      `/admin/companies/${id}/blacklist`
+    );
 
-    loadCompanies()
+    await searchCompanies();
+
+  } catch (error) {
+
+    alert(
+      error?.response?.data?.message ||
+      "Failed to blacklist company."
+    );
+
+  }
 
 }
 
-onMounted(loadCompanies)
+
+async function unblacklistCompany(id) {
+
+  try {
+
+    await api.put(
+      `/admin/companies/${id}/unblacklist`
+    );
+
+    await searchCompanies();
+
+  } catch (error) {
+
+    alert(
+      error?.response?.data?.message ||
+      "Failed to remove blacklist."
+    );
+
+  }
+
+}
+
+
+onMounted(() => {
+
+  searchCompanies();
+
+});
 
 </script>

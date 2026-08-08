@@ -114,67 +114,72 @@ def apply(id):
 
     student = StudentProfile.query.filter_by(
         user_id=user_id
-    ).first()
+    ).first_or_404()
 
     drive = PlacementDrive.query.get_or_404(id)
 
+    # Check drive approval
     if drive.status != "approved":
-
         return jsonify({
-            "message":"Drive not approved."
-        }),400
+            "message": "Drive not approved."
+        }), 400
 
+    # Check application deadline
     if drive.application_deadline < date.today():
-
         return jsonify({
-            "message":"Deadline passed."
-        }),400
+            "message": "Deadline passed."
+        }), 400
 
-    if student.cgpa < drive.minimum_cgpa:
-
+    # Check CGPA
+    if (
+        drive.minimum_cgpa is not None
+        and student.cgpa < drive.minimum_cgpa
+    ):
         return jsonify({
-            "message":"CGPA not eligible."
-        }),400
+            "message": "CGPA not eligible."
+        }), 400
 
-    if student.branch != drive.eligibility_branch:
+    # Check branch
+    student_branch = (
+        student.branch or ""
+    ).strip().lower()
 
+    drive_branch = (
+        drive.eligibility_branch or ""
+    ).strip().lower()
+
+    if student_branch != drive_branch:
         return jsonify({
-            "message":"Branch not eligible."
-        }),400
+            "message": "Branch not eligible.",
+            "student_branch": student.branch,
+            "required_branch": drive.eligibility_branch
+        }), 400
 
+    # Check duplicate application
     already = Application.query.filter_by(
-
         student_id=student.id,
-
         drive_id=id
-
     ).first()
 
     if already:
-
         return jsonify({
+            "message": "Already applied."
+        }), 400
 
-            "message":"Already applied."
-
-        }),400
-
+    # Create application
     application = Application(
-
         student_id=student.id,
-
         drive_id=id
-
     )
 
     db.session.add(application)
-
     db.session.commit()
 
     return jsonify({
+        "message": "Application submitted."
+    }), 201
 
-        "message":"Application submitted."
 
-    }),201
 @student_bp.route("/applications")
 @jwt_required()
 def applications():
@@ -810,10 +815,44 @@ def get_notifications():
     for notification in notifications:
 
         result.append({
+
             "id": notification.id,
+
             "message": notification.message,
+
             "is_read": notification.is_read,
-            "created_at": str(notification.created_at)
+
+            "created_at": (
+                notification.created_at.isoformat()
+                if notification.created_at
+                else None
+            )
+
         })
 
     return jsonify(result)
+
+
+@student_bp.route(
+    "/notifications/<int:id>/read",
+    methods=["PUT"]
+)
+@jwt_required()
+def mark_notification_read(id):
+
+    user_id = get_jwt_identity()
+
+    notification = Notification.query.filter_by(
+        id=id,
+        user_id=user_id
+    ).first_or_404()
+
+    notification.is_read = True
+
+    db.session.commit()
+
+    return jsonify({
+
+        "message": "Notification marked as read."
+
+    })

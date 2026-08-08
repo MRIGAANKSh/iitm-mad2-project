@@ -1,77 +1,98 @@
 
 <template>
 
-  <div class="row g-0 min-vh-100">
+  <div class="container-fluid">
 
-    <!-- =========================
-         COMPANY SIDEBAR
-    ========================== -->
+    <div class="row min-vh-100">
 
-    <div class="col-md-2 bg-light border-end p-3">
+      <!-- =========================
+           COMPANY SIDEBAR
+      ========================== -->
 
-      <div class="list-group">
+      <div class="col-md-2 bg-light border-end p-3">
 
-        <!-- Dashboard -->
-        <router-link
-          to="/company/dashboard"
-          class="list-group-item list-group-item-action"
-          active-class="active"
-        >
-          Dashboard
-        </router-link>
+        <!-- Portal Title -->
+        <div class="mb-4">
 
+          <h5 class="fw-bold mb-1">
+            Company Portal
+          </h5>
 
-        <!-- Create Drive -->
-        <router-link
-          to="/company/create-drive"
-          class="list-group-item list-group-item-action"
-          active-class="active"
-        >
-          Create Drive
-        </router-link>
+          <small class="text-muted">
+            Placement Management
+          </small>
+
+        </div>
 
 
-        <!-- My Drives -->
-        <router-link
-          to="/company/drives"
-          class="list-group-item list-group-item-action"
-          active-class="active"
-        >
-          My Drives
-        </router-link>
+        <!-- Navigation -->
+        <div class="list-group">
+
+          <!-- Dashboard -->
+          <router-link
+            to="/company/dashboard"
+            class="list-group-item list-group-item-action"
+            active-class="active"
+          >
+            Dashboard
+          </router-link>
 
 
-        <!-- ALL COMPANY APPLICANTS -->
-        <router-link
-          to="/company/applicants"
-          class="list-group-item list-group-item-action"
-          active-class="active"
-        >
-          Applicants
-        </router-link>
+          <!-- Create Drive -->
+          <router-link
+            to="/company/create-drive"
+            class="list-group-item list-group-item-action"
+            active-class="active"
+          >
+            Create Drive
+          </router-link>
+
+
+          <!-- My Drives -->
+          <router-link
+            to="/company/drives"
+            class="list-group-item list-group-item-action"
+            active-class="active"
+          >
+            My Drives
+          </router-link>
+
+
+          <!-- Applicants -->
+          <router-link
+            to="/company/applicants"
+            class="list-group-item list-group-item-action"
+            active-class="active"
+          >
+            Applicants
+          </router-link>
+
+
+          <!-- Profile -->
+          <router-link
+            to="/company/profile"
+            class="list-group-item list-group-item-action"
+            active-class="active"
+          >
+            Profile
+          </router-link>
+
+        </div>
 
       </div>
 
-    </div>
 
+      <!-- =========================
+           MAIN CONTENT
+      ========================== -->
 
-    <!-- =========================
-         MAIN CONTENT
-    ========================== -->
+      <div class="col-md-10 p-4">
 
-    <div class="col-md-10 p-4">
+        <!-- Child routes render here -->
 
-      <!--
-        Child pages are rendered here.
+        <router-view />
 
-        /company/dashboard
-        /company/create-drive
-        /company/drives
-        /company/applicants
-        /company/drives/:id/applicants
-      -->
-
-      <router-view />
+      </div>
 
     </div>
 
@@ -79,9 +100,12 @@
 
 </template>
 
+
 <script setup>
-// No special JavaScript is required in CompanyLayout.vue.
-// Vue Router handles the navigation and <router-view>
-// renders the selected company page.
+
+// No JavaScript required for the layout.
+// Vue Router automatically renders the
+// selected child route inside <router-view />.
+
 </script>
 

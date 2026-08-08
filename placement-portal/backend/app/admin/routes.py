@@ -13,7 +13,20 @@ from app.models import (
     PlacementDrive,
     Application
 )
-from flask_jwt_extended import jwt_required, get_jwt_identity
+
+from flask_jwt_extended import jwt_required, get_jwt_identity,get_jwt
+
+
+
+def admin_required():
+
+    claims = get_jwt()
+
+    if claims.get("role") != "admin":
+
+        return False
+
+    return True
 
 @admin_bp.route("/dashboard")
 @role_required("admin")
@@ -96,23 +109,6 @@ def reject_company(id):
     })
 
 
-@admin_bp.route("/companies/<int:id>/blacklist", methods=["PUT"])
-@role_required("admin")
-def blacklist_company(id):
-
-    company = CompanyProfile.query.get_or_404(id)
-
-    company.is_blacklisted = True
-
-    db.session.commit()
-
-    return jsonify({
-
-        "message":"Company blacklisted."
-
-    })
-
-
 @admin_bp.route("/students")
 @role_required("admin")
 def students():
@@ -144,86 +140,7 @@ def students():
     return jsonify(data)
 
 
-@admin_bp.route("/students/<int:id>/deactivate", methods=["PUT"])
-@role_required("admin")
-def deactivate_student(id):
 
-    student = StudentProfile.query.get_or_404(id)
-
-    user = User.query.get(student.user_id)
-
-    user.is_active = False
-
-    db.session.commit()
-
-    return jsonify({
-
-        "message":"Student deactivated."
-
-    })
-
-@admin_bp.route("/students/search")
-@role_required("admin")
-def search_students():
-
-    keyword = request.args.get("q", "")
-
-    students = StudentProfile.query.join(User).filter(
-
-        User.name.ilike(f"%{keyword}%")
-
-    ).all()
-
-    data = []
-
-    for student in students:
-
-        user = User.query.get(student.user_id)
-
-        data.append({
-
-            "id": student.id,
-
-            "name": user.name,
-
-            "email": user.email,
-
-            "branch": student.branch
-
-        })
-
-    return jsonify(data)
-
-
-@admin_bp.route("/companies/search")
-@role_required("admin")
-def search_companies():
-
-    keyword = request.args.get("q", "")
-
-    companies = CompanyProfile.query.filter(
-
-        CompanyProfile.company_name.ilike(
-            f"%{keyword}%"
-        )
-
-    ).all()
-
-    data = []
-
-    for company in companies:
-
-        data.append({
-
-            "id": company.id,
-
-            "company_name": company.company_name,
-
-            "approval_status": company.approval_status
-
-        })
-
-    return jsonify(data)
 
 @admin_bp.route("/companies")
 
@@ -333,3 +250,299 @@ def close_drive(id):
         "message": "Drive Closed"
     })
 
+@admin_bp.route("/students/search")
+@jwt_required()
+def search_students():
+
+    if not admin_required():
+
+        return jsonify({
+            "message": "Admin access required."
+        }), 403
+
+    query = request.args.get(
+        "q",
+        ""
+    ).strip()
+
+    students = StudentProfile.query.join(
+        User,
+        StudentProfile.user_id == User.id
+    ).filter(
+        db.or_(
+            User.name.ilike(f"%{query}%"),
+            User.email.ilike(f"%{query}%"),
+            StudentProfile.student_id.ilike(f"%{query}%"),
+            StudentProfile.branch.ilike(f"%{query}%")
+        )
+    ).all()
+
+    result = []
+
+    for student in students:
+
+        user = User.query.get(
+            student.user_id
+        )
+
+        result.append({
+
+            "id": student.id,
+
+            "student_id": student.student_id,
+
+            "name": user.name,
+
+            "email": user.email,
+
+            "phone": student.phone,
+
+            "branch": student.branch,
+
+            "cgpa": student.cgpa,
+
+            "graduation_year":
+                student.graduation_year,
+
+            "is_active":
+                user.is_active
+
+        })
+
+    return jsonify(result)
+
+
+@admin_bp.route("/companies/search")
+@jwt_required()
+def search_companies():
+
+    if not admin_required():
+
+        return jsonify({
+            "message": "Admin access required."
+        }), 403
+
+    query = request.args.get(
+        "q",
+        ""
+    ).strip()
+
+    companies = CompanyProfile.query.join(
+        User,
+        CompanyProfile.user_id == User.id
+    ).filter(
+        db.or_(
+            CompanyProfile.company_name.ilike(
+                f"%{query}%"
+            ),
+
+            User.email.ilike(
+                f"%{query}%"
+            ),
+
+            CompanyProfile.hr_name.ilike(
+                f"%{query}%"
+            )
+        )
+    ).all()
+
+    result = []
+
+    for company in companies:
+
+        user = User.query.get(
+            company.user_id
+        )
+
+        result.append({
+
+            "id": company.id,
+
+            "company_name":
+                company.company_name,
+
+            "email":
+                user.email,
+
+            "hr_name":
+                company.hr_name,
+
+            "hr_email":
+                company.hr_email,
+
+            "approval_status":
+                company.approval_status,
+
+            "is_blacklisted":
+                company.is_blacklisted,
+
+            "is_active":
+                user.is_active
+
+        })
+
+    return jsonify(result)
+
+
+@admin_bp.route(
+    "/students/<int:id>/deactivate",
+    methods=["PUT"]
+)
+@jwt_required()
+def deactivate_student(id):
+
+    if not admin_required():
+        return jsonify({
+            "message": "Admin access required."
+        }), 403
+
+    student = StudentProfile.query.get_or_404(id)
+
+    user = User.query.get_or_404(
+        student.user_id
+    )
+
+    user.is_active = False
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Student deactivated successfully."
+    })
+
+
+@admin_bp.route(
+    "/students/<int:id>/activate",
+    methods=["PUT"]
+)
+@jwt_required()
+def activate_student(id):
+
+    if not admin_required():
+        return jsonify({
+            "message": "Admin access required."
+        }), 403
+
+    student = StudentProfile.query.get_or_404(id)
+
+    user = User.query.get_or_404(
+        student.user_id
+    )
+
+    user.is_active = True
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Student activated successfully."
+    })
+
+@admin_bp.route(
+    "/companies/<int:id>/blacklist",
+    methods=["PUT"]
+)
+@jwt_required()
+def blacklist_company(id):
+
+    if not admin_required():
+        return jsonify({
+            "message": "Admin access required."
+        }), 403
+
+    company = CompanyProfile.query.get_or_404(id)
+
+    company.is_blacklisted = True
+    company.approval_status = "rejected"
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Company blacklisted successfully."
+    }), 200
+
+
+@admin_bp.route(
+    "/companies/<int:id>/unblacklist",
+    methods=["PUT"]
+)
+@jwt_required()
+def unblacklist_company(id):
+
+    if not admin_required():
+        return jsonify({
+            "message": "Admin access required."
+        }), 403
+
+    company = CompanyProfile.query.get_or_404(id)
+
+    company.is_blacklisted = False
+    company.approval_status = "approved"
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Company removed from blacklist and approved again."
+    }), 200
+
+
+@admin_bp.route(
+    "/companies/<int:id>/deactivate",
+    methods=["PUT"]
+)
+
+
+@jwt_required()
+def deactivate_company(id):
+
+    if not admin_required():
+
+        return jsonify({
+            "message": "Admin access required."
+        }), 403
+
+    company = CompanyProfile.query.get_or_404(id)
+
+    user = User.query.get_or_404(
+        company.user_id
+    )
+
+    user.is_active = False
+
+    db.session.commit()
+
+    return jsonify({
+
+        "message":
+            "Company deactivated successfully."
+
+    })
+
+@admin_bp.route(
+    "/companies/<int:id>/activate",
+    methods=["PUT"]
+)
+@jwt_required()
+def activate_company(id):
+
+    if not admin_required():
+
+        return jsonify({
+            "message": "Admin access required."
+        }), 403
+
+    company = CompanyProfile.query.get_or_404(id)
+
+    user = User.query.get_or_404(
+        company.user_id
+    )
+
+    user.is_active = True
+
+    db.session.commit()
+
+    return jsonify({
+
+        "message":
+            "Company activated successfully."
+
+    })

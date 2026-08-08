@@ -4,7 +4,7 @@ from config import Config
 
 from app.extensions import db, jwt, cache
 from app.extensions import cors
-
+from app.extensions import mail
 from app.admin import admin_bp
 from app.auth import auth_bp
 
@@ -22,7 +22,7 @@ def create_app():
     db.init_app(app)
     cache.init_app(app)
     jwt.init_app(app)
-
+    mail.init_app(app)
     cors.init_app(app)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)

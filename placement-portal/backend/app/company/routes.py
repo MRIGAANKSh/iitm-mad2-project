@@ -123,16 +123,40 @@ def create_drive():
 
     user_id = get_jwt_identity()
 
+    user = User.query.get_or_404(
+        user_id
+    )
+
+    if not user.is_active:
+
+        return jsonify({
+
+            "message":
+                "Your account has been deactivated."
+
+        }), 403
     company = CompanyProfile.query.filter_by(
         user_id=user_id
     ).first_or_404()
 
-    if company.approval_status != "approved":
+    if not company.approval_status == "approved":
 
         return jsonify({
-            "message": "Company not approved."
+
+        "message":
+            "Company is not approved."
+
         }), 403
 
+
+    if company.is_blacklisted:
+
+        return jsonify({
+
+        "message":
+            "Blacklisted companies cannot create placement drives."
+
+        }), 403
     data = request.get_json()
 
     if not data:
@@ -548,6 +572,8 @@ def update_status(id):
 # SCHEDULE INTERVIEW
 # =========================================================
 
+
+
 @company_bp.route(
     "/applications/<int:id>/interview",
     methods=["POST"]
@@ -555,70 +581,161 @@ def update_status(id):
 @jwt_required()
 def schedule_interview(id):
 
+    # ---------------------------------------------
+    # Get logged-in company
+    # ---------------------------------------------
+
     user_id = get_jwt_identity()
 
     company = CompanyProfile.query.filter_by(
         user_id=user_id
     ).first_or_404()
 
+
+    # ---------------------------------------------
+    # Get application
+    # ---------------------------------------------
+
     application = Application.query.get_or_404(id)
+
+
+    # ---------------------------------------------
+    # Make sure this application belongs
+    # to the logged-in company's drive
+    # ---------------------------------------------
 
     drive = PlacementDrive.query.filter_by(
         id=application.drive_id,
         company_id=company.id
     ).first()
 
+
     if not drive:
 
         return jsonify({
 
             "message":
-            "You are not authorized to schedule this interview."
+                "You cannot schedule an interview for this application."
 
         }), 403
 
 
+    # ---------------------------------------------
+    # Get request data
+    # ---------------------------------------------
+
     data = request.get_json()
 
-    if not data:
+
+    interview_date_string = data.get(
+        "interview_date"
+    )
+
+    interview_type = data.get(
+        "interview_type"
+    )
+
+    remarks = data.get(
+        "remarks",
+        ""
+    )
+
+
+    # ---------------------------------------------
+    # Validate date
+    # ---------------------------------------------
+
+    if not interview_date_string:
 
         return jsonify({
 
             "message":
-            "No JSON data received."
+                "Interview date and time are required."
 
         }), 400
 
+
+    # ---------------------------------------------
+    # Convert string to Python datetime
+    #
+    # Frontend sends:
+    #
+    # 2026-08-20T11:56
+    #
+    # Python receives:
+    #
+    # datetime(2026, 8, 20, 11, 56)
+    # ---------------------------------------------
+
+    try:
+
+        interview_date = datetime.fromisoformat(
+            interview_date_string
+        )
+
+    except ValueError:
+
+        return jsonify({
+
+            "message":
+                "Invalid interview date format."
+
+        }), 400
+
+
+    # ---------------------------------------------
+    # Validate interview type
+    # ---------------------------------------------
+
+    if not interview_type:
+
+        return jsonify({
+
+            "message":
+                "Interview type is required."
+
+        }), 400
+
+
+    # ---------------------------------------------
+    # Create interview
+    # ---------------------------------------------
 
     interview = Interview(
 
         application_id=id,
 
-        interview_date=data.get(
-            "interview_date"
-        ),
+        interview_date=interview_date,
 
-        interview_type=data.get(
-            "interview_type"
-        ),
+        interview_type=interview_type,
 
         status="Scheduled",
 
-        remarks=data.get(
-            "remarks"
-        )
+        remarks=remarks
 
     )
+
+
+    # ---------------------------------------------
+    # Save to database
+    # ---------------------------------------------
 
     db.session.add(interview)
 
     db.session.commit()
 
 
+    # ---------------------------------------------
+    # Response
+    # ---------------------------------------------
+
     return jsonify({
 
         "message":
-        "Interview scheduled."
+            "Interview scheduled successfully.",
+
+        "interview_id":
+            interview.id
 
     }), 201
 
@@ -895,4 +1012,114 @@ def edit_drive(id):
         "Drive updated successfully."
 
     }), 200
+
+@company_bp.route("/profile")
+@jwt_required()
+def get_company_profile():
+
+    user_id = get_jwt_identity()
+
+    user = User.query.get_or_404(
+        user_id
+    )
+
+    company = CompanyProfile.query.filter_by(
+        user_id=user_id
+    ).first_or_404()
+
+    return jsonify({
+
+        "name": user.name,
+
+        "email": user.email,
+
+        "company_name":
+            company.company_name,
+
+        "hr_name":
+            company.hr_name,
+
+        "hr_email":
+            company.hr_email,
+
+        "phone":
+            company.phone,
+
+        "website":
+            company.website,
+
+        "description":
+            company.description,
+
+        "approval_status":
+            company.approval_status,
+
+        "is_blacklisted":
+            company.is_blacklisted
+
+    })
+
+
+@company_bp.route(
+    "/profile",
+    methods=["PUT"]
+)
+@jwt_required()
+def update_company_profile():
+
+    user_id = get_jwt_identity()
+
+    user = User.query.get_or_404(
+        user_id
+    )
+
+    company = CompanyProfile.query.filter_by(
+        user_id=user_id
+    ).first_or_404()
+
+    data = request.get_json()
+
+    user.name = data.get(
+        "name",
+        user.name
+    )
+
+    company.company_name = data.get(
+        "company_name",
+        company.company_name
+    )
+
+    company.hr_name = data.get(
+        "hr_name",
+        company.hr_name
+    )
+
+    company.hr_email = data.get(
+        "hr_email",
+        company.hr_email
+    )
+
+    company.phone = data.get(
+        "phone",
+        company.phone
+    )
+
+    company.website = data.get(
+        "website",
+        company.website
+    )
+
+    company.description = data.get(
+        "description",
+        company.description
+    )
+
+    db.session.commit()
+
+    return jsonify({
+
+        "message":
+            "Company profile updated successfully."
+
+    })
 

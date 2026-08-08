@@ -2,59 +2,100 @@
 
   <div class="container mt-4">
 
+    <div class="d-flex justify-content-between align-items-center mb-4">
 
-<h2 class="mb-4">
-  Student Dashboard
-</h2>
+      <div>
 
-<!-- Loading -->
-<div
-  v-if="loading"
-  class="text-center py-5"
->
-  <div
-    class="spinner-border text-primary"
-    role="status"
-  ></div>
+        <h2>Student Dashboard</h2>
 
-  <p class="mt-2">
-    Loading dashboard...
-  </p>
-</div>
+        <p class="text-muted">
+          Welcome to your placement dashboard.
+        </p>
 
+      </div>
 
-<!-- Error -->
-<div
-  v-else-if="error"
-  class="alert alert-danger"
->
-  {{ error }}
-</div>
+      <button
+        class="btn btn-outline-primary"
+        @click="loadNotifications"
+      >
+        🔄 Refresh
+      </button>
+
+    </div>
 
 
-<!-- Dashboard -->
-<div v-else>
+    <!-- Notifications -->
 
-  <div class="row g-4">
+    <div class="card shadow-sm mb-4">
 
-    <!-- Available Drives -->
-    <div class="col-md-3">
+      <div class="card-header">
 
-      <div class="card shadow-sm text-center h-100">
+        <h5 class="mb-0">
+          🔔 Notifications
+        </h5>
 
-        <div class="card-body">
+      </div>
 
-          <h5 class="card-title">
-            Available Drives
-          </h5>
 
-          <h2 class="text-primary">
-            {{ dashboard.drives || 0 }}
-          </h2>
+      <div class="card-body">
 
-          <p class="text-muted mb-0">
-            Approved placement drives
-          </p>
+        <div
+          v-if="notifications.length === 0"
+          class="text-muted"
+        >
+
+          No notifications.
+
+        </div>
+
+
+        <div
+          v-for="notification in notifications"
+          :key="notification.id"
+          class="alert"
+          :class="
+            notification.is_read
+              ? 'alert-light'
+              : 'alert-warning'
+          "
+        >
+
+          <div
+            class="d-flex justify-content-between align-items-center"
+          >
+
+            <div>
+
+              <strong
+                v-if="!notification.is_read"
+              >
+                New
+              </strong>
+
+              {{ notification.message }}
+
+              <br>
+
+              <small class="text-muted">
+
+                {{ formatDate(notification.created_at) }}
+
+              </small>
+
+            </div>
+
+
+            <button
+              v-if="!notification.is_read"
+              class="btn btn-sm btn-outline-success"
+              @click="markAsRead(notification.id)"
+            >
+
+              Mark as read
+
+            </button>
+
+          </div>
 
         </div>
 
@@ -63,149 +104,173 @@
     </div>
 
 
-    <!-- Applications -->
-    <div class="col-md-3">
+    <!-- Dashboard cards -->
 
-      <div class="card shadow-sm text-center h-100">
+    <div class="row">
 
-        <div class="card-body">
+      <div class="col-md-4 mb-3">
 
-          <h5 class="card-title">
-            Applications
-          </h5>
+        <div class="card shadow-sm">
 
-          <h2 class="text-info">
-            {{ dashboard.applications || 0 }}
-          </h2>
+          <div class="card-body">
 
-          <p class="text-muted mb-0">
-            Applications submitted
-          </p>
+            <h5>Placement Drives</h5>
+
+            <p>
+              View approved placement opportunities.
+            </p>
+
+            <router-link
+              to="/student/drives"
+              class="btn btn-primary"
+            >
+
+              View Drives
+
+            </router-link>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="col-md-4 mb-3">
+
+        <div class="card shadow-sm">
+
+          <div class="card-body">
+
+            <h5>Applications</h5>
+
+            <p>
+              Track your placement applications.
+            </p>
+
+            <router-link
+              to="/student/applications"
+              class="btn btn-primary"
+            >
+
+              My Applications
+
+            </router-link>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="col-md-4 mb-3">
+
+        <div class="card shadow-sm">
+
+          <div class="card-body">
+
+            <h5>Profile</h5>
+
+            <p>
+              Update your student information.
+            </p>
+
+            <router-link
+              to="/student/profile"
+              class="btn btn-primary"
+            >
+
+              My Profile
+
+            </router-link>
+
+          </div>
 
         </div>
 
       </div>
 
     </div>
-
-
-    <!-- Shortlisted -->
-    <div class="col-md-3">
-
-      <div class="card shadow-sm text-center h-100">
-
-        <div class="card-body">
-
-          <h5 class="card-title">
-            Shortlisted
-          </h5>
-
-          <h2 class="text-warning">
-            {{ dashboard.shortlisted || 0 }}
-          </h2>
-
-          <p class="text-muted mb-0">
-            Applications shortlisted
-          </p>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- Selected -->
-    <div class="col-md-3">
-
-      <div class="card shadow-sm text-center h-100">
-
-        <div class="card-body">
-
-          <h5 class="card-title">
-            Selected
-          </h5>
-
-          <h2 class="text-success">
-            {{ dashboard.selected || 0 }}
-          </h2>
-
-          <p class="text-muted mb-0">
-            Final selections
-          </p>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-
 
   </div>
 
 </template>
 
+
 <script setup>
 
 import { ref, onMounted } from "vue";
+
 import api from "../../services/api";
 
 
-const dashboard = ref({
-  drives: 0,
-  applications: 0,
-  shortlisted: 0,
-  selected: 0
-});
-
-const loading = ref(true);
-const error = ref("");
+const notifications = ref([]);
 
 
-async function loadDashboard() {
-
-  loading.value = true;
-  error.value = "";
+async function loadNotifications() {
 
   try {
 
     const response = await api.get(
-      "/student/dashboard"
+      "/student/notifications"
     );
 
-    dashboard.value = {
-      drives: response.data.drives ?? 0,
-      applications: response.data.applications ?? 0,
-      shortlisted: response.data.shortlisted ?? 0,
-      selected: response.data.selected ?? 0
-    };
+    notifications.value = response.data;
 
-  } catch (err) {
+  }
+
+  catch (error) {
 
     console.error(
-      "Failed to load student dashboard:",
-      err
+      "Failed to load notifications:",
+      error
     );
-
-    error.value =
-      err.response?.data?.message ||
-      "Failed to load dashboard.";
-
-  } finally {
-
-    loading.value = false;
 
   }
 
 }
 
 
+async function markAsRead(id) {
+
+  try {
+
+    await api.put(
+      `/student/notifications/${id}/read`
+    );
+
+    await loadNotifications();
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Failed to mark notification:",
+      error
+    );
+
+  }
+
+}
+
+
+function formatDate(date) {
+
+  if (!date) {
+    return "";
+  }
+
+  return new Date(date).toLocaleString();
+
+}
+
+
 onMounted(() => {
-  loadDashboard();
+
+  loadNotifications();
+
 });
 
 </script>

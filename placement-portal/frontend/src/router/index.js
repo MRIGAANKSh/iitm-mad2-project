@@ -23,7 +23,8 @@ import CreateDrive from "../pages/company/CreateDrive.vue";
 import Drives from "../pages/company/Drives.vue";
 import Applicants from "../pages/company/Applicants.vue";
 import EditDrive from "../pages/company/EditDrives.vue";
-import DriveApplicants from "../pages/company/DriveApplicants.vue"
+import DriveApplicants from "../pages/company/DriveApplicants.vue";
+import CompanyProfile from "../pages/company/Profile.vue"
 
 // Student
 import StudentDashboard from "../pages/student/Dashboard.vue";
@@ -110,6 +111,10 @@ const routes = [
       path: "edit-drive/:id",
       component: EditDrive,
     },
+    {
+    path: "profile",
+    component: CompanyProfile
+},
   ],
 },
 

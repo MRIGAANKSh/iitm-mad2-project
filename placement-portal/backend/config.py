@@ -16,6 +16,13 @@ class Config:
 
     CACHE_DEFAULT_TIMEOUT = 300
 
+    MAIL_SERVER = "smtp.gmail.com"
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+
+    MAIL_USERNAME = "23f2003457@ds.study.iitm.ac.in"
+    MAIL_PASSWORD = "intj bdag nrhx iqwk"
+
     SQLALCHEMY_DATABASE_URI = (
         "sqlite:///"
         + os.path.join(
