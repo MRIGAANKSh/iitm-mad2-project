@@ -1,492 +1,540 @@
 
 <template>
 
-  <div>
+  <!-- =========================
+       HEADER
+  ========================== -->
 
-    <!-- =========================
-         HEADER
-    ========================== -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
 
-      <div>
+      <h2>
+        Drive Applicants
+      </h2>
 
-        <h2>
-          Drive Applicants
-        </h2>
-
-        <p class="text-muted mb-0">
-          Applicants for this placement drive
-        </p>
-
-      </div>
-
-
-      <button
-        class="btn btn-secondary"
-        @click="goBack"
-      >
-        Back to Drives
-      </button>
-
-    </div>
-
-
-    <!-- =========================
-         LOADING
-    ========================== -->
-
-    <div
-      v-if="loading"
-      class="text-center py-5"
-    >
-
-      <div
-        class="spinner-border text-primary"
-        role="status"
-      ></div>
-
-      <p class="mt-2 text-muted">
-        Loading applicants...
+      <p class="text-muted mb-0">
+        Applicants for this placement drive
       </p>
 
     </div>
 
 
-    <!-- =========================
-         ERROR
-    ========================== -->
+    <button
+      class="btn btn-secondary"
+      @click="goBack"
+    >
+      Back to Drives
+    </button>
+
+  </div>
+
+
+  <!-- =========================
+       LOADING
+  ========================== -->
+
+  <div
+    v-if="loading"
+    class="text-center py-5"
+  >
 
     <div
-      v-else-if="error"
-      class="alert alert-danger"
+      class="spinner-border text-primary"
+      role="status"
+    ></div>
+
+    <p class="mt-2 text-muted">
+      Loading applicants...
+    </p>
+
+  </div>
+
+
+  <!-- =========================
+       ERROR
+  ========================== -->
+
+  <div
+    v-else-if="error"
+    class="alert alert-danger"
+  >
+
+    {{ error }}
+
+  </div>
+
+
+  <!-- =========================
+       APPLICANTS
+  ========================== -->
+
+  <div v-else>
+
+    <!-- No Applicants -->
+
+    <div
+      v-if="applicants.length === 0"
+      class="alert alert-info"
     >
 
-      {{ error }}
+      No applicants found for this drive.
 
     </div>
 
 
     <!-- =========================
-         APPLICANTS
+         TABLE
     ========================== -->
 
-    <div v-else>
+    <div
+      v-else
+      class="table-responsive"
+    >
 
-      <!-- No Applicants -->
-
-      <div
-        v-if="applicants.length === 0"
-        class="alert alert-info"
+      <table
+        class="table table-bordered table-hover align-middle"
       >
 
-        No applicants found for this drive.
+        <thead class="table-dark">
 
-      </div>
+          <tr>
 
+            <th>
+              Student
+            </th>
 
-      <!-- =========================
-           TABLE
-      ========================== -->
+            <th>
+              Email
+            </th>
 
-      <div
-        v-else
-        class="table-responsive"
-      >
+            <th>
+              Job
+            </th>
 
-        <table
-          class="table table-bordered table-hover align-middle"
-        >
+            <th>
+              Branch
+            </th>
 
-          <thead class="table-dark">
+            <th>
+              CGPA
+            </th>
 
-            <tr>
+            <th>
+              Resume
+            </th>
 
-              <th>
-                Student
-              </th>
+            <th>
+              Status
+            </th>
 
-              <th>
-                Email
-              </th>
+            <th style="min-width: 380px;">
+              Actions
+            </th>
 
-              <th>
-                Job
-              </th>
+          </tr>
 
-              <th>
-                Branch
-              </th>
-
-              <th>
-                CGPA
-              </th>
-
-              <th>
-                Resume
-              </th>
-
-              <th>
-                Status
-              </th>
-
-              <th style="min-width: 350px;">
-                Actions
-              </th>
-
-            </tr>
-
-          </thead>
+        </thead>
 
 
-          <tbody>
+        <tbody>
 
-            <tr
-              v-for="student in applicants"
-              :key="student.application_id"
-            >
+          <tr
+            v-for="student in applicants"
+            :key="student.application_id"
+          >
 
-              <!-- Student -->
+            <!-- =========================
+                 STUDENT
+            ========================== -->
 
-              <td>
+            <td>
 
-                <strong>
-                  {{ student.student_name || "N/A" }}
-                </strong>
+              <strong>
+                {{ student.student_name || "N/A" }}
+              </strong>
 
-              </td>
-
-
-              <!-- Email -->
-
-              <td>
-                {{ student.email || "N/A" }}
-              </td>
+            </td>
 
 
-              <!-- Job -->
+            <!-- =========================
+                 EMAIL
+            ========================== -->
 
-              <td>
-                {{ student.job_title || "N/A" }}
-              </td>
-
-
-              <!-- Branch -->
-
-              <td>
-                {{ student.branch || "N/A" }}
-              </td>
+            <td>
+              {{ student.email || "N/A" }}
+            </td>
 
 
-              <!-- CGPA -->
+            <!-- =========================
+                 JOB
+            ========================== -->
 
-              <td>
-                {{ student.cgpa ?? "N/A" }}
-              </td>
-
-
-              <!-- Resume -->
-
-              <td>
-
-                <a
-                  v-if="student.resume"
-                  :href="getResumeUrl(student.resume)"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="btn btn-outline-primary btn-sm"
-                >
-
-                  View Resume
-
-                </a>
+            <td>
+              {{ student.job_title || "N/A" }}
+            </td>
 
 
-                <span
-                  v-else
-                  class="text-muted"
-                >
+            <!-- =========================
+                 BRANCH
+            ========================== -->
 
-                  No Resume
-
-                </span>
-
-              </td>
+            <td>
+              {{ student.branch || "N/A" }}
+            </td>
 
 
-              <!-- Status -->
+            <!-- =========================
+                 CGPA
+            ========================== -->
 
-              <td>
+            <td>
+              {{ student.cgpa ?? "N/A" }}
+            </td>
 
-                <span
-                  class="badge"
-                  :class="getStatusClass(student.status)"
-                >
 
-                  {{ student.status || "Applied" }}
+            <!-- =========================
+                 RESUME
+            ========================== -->
 
-                </span>
+            <td>
 
-              </td>
+              <a
+                v-if="student.resume"
+                :href="getResumeUrl(student.resume)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn btn-outline-primary btn-sm"
+              >
+
+                View Resume
+
+              </a>
+
+
+              <span
+                v-else
+                class="text-muted"
+              >
+
+                No Resume
+
+              </span>
+
+            </td>
+
+
+            <!-- =========================
+                 STATUS
+            ========================== -->
+
+            <td>
+
+              <span
+                class="badge"
+                :class="getStatusClass(student.status)"
+              >
+
+                {{ student.status || "Applied" }}
+
+              </span>
+
+            </td>
+
+
+            <!-- =========================
+                 ACTIONS
+            ========================== -->
+
+            <td>
+
+              <!-- Shortlist -->
+
+              <button
+                class="btn btn-warning btn-sm me-1 mb-1"
+                :disabled="
+                  processingId === student.application_id
+                "
+                @click="
+                  updateStatus(
+                    student.application_id,
+                    'Shortlisted'
+                  )
+                "
+              >
+
+                Shortlist
+
+              </button>
+
+
+              <!-- Reject -->
+
+              <button
+                class="btn btn-danger btn-sm me-1 mb-1"
+                :disabled="
+                  processingId === student.application_id
+                "
+                @click="
+                  updateStatus(
+                    student.application_id,
+                    'Rejected'
+                  )
+                "
+              >
+
+                Reject
+
+              </button>
+
+
+              <!-- Select -->
+
+              <button
+                class="btn btn-success btn-sm me-1 mb-1"
+                :disabled="
+                  processingId === student.application_id
+                "
+                @click="
+                  updateStatus(
+                    student.application_id,
+                    'Selected'
+                  )
+                "
+              >
+
+                Select
+
+              </button>
 
 
               <!-- =========================
-                   ACTIONS
+                   SCHEDULE INTERVIEW
               ========================== -->
 
-              <td>
+              <button
+                v-if="
+                  !scheduledInterviews.includes(
+                    student.application_id
+                  )
+                "
+                class="btn btn-primary btn-sm mb-1"
+                @click="openInterview(student)"
+              >
 
-                <button
-                  class="btn btn-warning btn-sm me-1 mb-1"
-                  :disabled="
-                    processingId === student.application_id
-                  "
-                  @click="
-                    updateStatus(
-                      student.application_id,
-                      'Shortlisted'
-                    )
-                  "
-                >
+                Schedule Interview
 
-                  Shortlist
-
-                </button>
+              </button>
 
 
-                <button
-                  class="btn btn-danger btn-sm me-1 mb-1"
-                  :disabled="
-                    processingId === student.application_id
-                  "
-                  @click="
-                    updateStatus(
-                      student.application_id,
-                      'Rejected'
-                    )
-                  "
-                >
+              <!-- =========================
+                   INTERVIEW SCHEDULED
+              ========================== -->
 
-                  Reject
+              <button
+                v-else
+                class="btn btn-success btn-sm mb-1"
+                disabled
+              >
 
-                </button>
+                ✓ Interview Scheduled
 
+              </button>
 
-                <button
-                  class="btn btn-success btn-sm me-1 mb-1"
-                  :disabled="
-                    processingId === student.application_id
-                  "
-                  @click="
-                    updateStatus(
-                      student.application_id,
-                      'Selected'
-                    )
-                  "
-                >
+            </td>
 
-                  Select
+          </tr>
 
-                </button>
+        </tbody>
 
-
-                <!-- Schedule Interview -->
-
-                <button
-                  class="btn btn-primary btn-sm mb-1"
-                  @click="openInterview(student)"
-                >
-
-                  Schedule Interview
-
-                </button>
-
-              </td>
-
-            </tr>
-
-          </tbody>
-
-        </table>
-
-      </div>
+      </table>
 
     </div>
 
-
-    <!-- =====================================================
-         INTERVIEW MODAL
-    ====================================================== -->
-
-    <div
-      v-if="showInterview"
-      class="modal d-block"
-      tabindex="-1"
-      style="background: rgba(0,0,0,0.5);"
-    >
-
-      <div class="modal-dialog">
-
-        <div class="modal-content">
+  </div>
 
 
-          <!-- Modal Header -->
+  <!-- =====================================================
+       INTERVIEW MODAL
+  ====================================================== -->
 
-          <div class="modal-header">
+  <div
+    v-if="showInterview"
+    class="modal d-block"
+    tabindex="-1"
+    style="background: rgba(0,0,0,0.5);"
+  >
 
-            <h5 class="modal-title">
-              Schedule Interview
-            </h5>
+    <div class="modal-dialog">
 
-
-            <button
-              type="button"
-              class="btn-close"
-              @click="closeInterview"
-            ></button>
-
-          </div>
+      <div class="modal-content">
 
 
-          <!-- Modal Body -->
+        <!-- =========================
+             MODAL HEADER
+        ========================== -->
 
-          <div class="modal-body">
+        <div class="modal-header">
 
-
-            <!-- Student -->
-
-            <div class="mb-3">
-
-              <p class="mb-1">
-
-                <strong>
-                  Student:
-                </strong>
-
-                {{ selectedStudent?.student_name || "N/A" }}
-
-              </p>
+          <h5 class="modal-title">
+            Schedule Interview
+          </h5>
 
 
-              <p class="mb-0">
+          <button
+            type="button"
+            class="btn-close"
+            @click="closeInterview"
+          ></button>
 
-                <strong>
-                  Email:
-                </strong>
-
-                {{ selectedStudent?.email || "N/A" }}
-
-              </p>
-
-            </div>
+        </div>
 
 
-            <!-- Interview Date -->
+        <!-- =========================
+             MODAL BODY
+        ========================== -->
 
-            <div class="mb-3">
-
-              <label class="form-label">
-                Interview Date & Time
-              </label>
+        <div class="modal-body">
 
 
-              <input
-                v-model="interviewDate"
-                type="datetime-local"
-                class="form-control"
-              />
+          <!-- Student -->
 
-            </div>
+          <div class="mb-3">
 
+            <p class="mb-1">
 
-            <!-- Interview Type -->
+              <strong>
+                Student:
+              </strong>
 
-            <div class="mb-3">
+              {{ selectedStudent?.student_name || "N/A" }}
 
-              <label class="form-label">
-                Interview Type
-              </label>
+            </p>
 
 
-              <select
-                v-model="interviewType"
-                class="form-select"
-              >
+            <p class="mb-0">
 
-                <option value="">
-                  Select type
-                </option>
+              <strong>
+                Email:
+              </strong>
 
-                <option value="Online">
-                  Online
-                </option>
+              {{ selectedStudent?.email || "N/A" }}
 
-                <option value="Offline">
-                  Offline
-                </option>
-
-                <option value="Phone">
-                  Phone
-                </option>
-
-              </select>
-
-            </div>
-
-
-            <!-- Remarks -->
-
-            <div class="mb-3">
-
-              <label class="form-label">
-                Remarks
-              </label>
-
-
-              <textarea
-                v-model="remarks"
-                class="form-control"
-                rows="3"
-                placeholder="Enter interview details or remarks..."
-              ></textarea>
-
-            </div>
+            </p>
 
           </div>
 
 
-          <!-- Modal Footer -->
+          <!-- Interview Date -->
 
-          <div class="modal-footer">
+          <div class="mb-3">
 
-            <button
-              type="button"
-              class="btn btn-secondary"
-              @click="closeInterview"
+            <label class="form-label">
+              Interview Date & Time
+            </label>
+
+
+            <input
+              v-model="interviewDate"
+              type="datetime-local"
+              class="form-control"
+            />
+
+          </div>
+
+
+          <!-- Interview Type -->
+
+          <div class="mb-3">
+
+            <label class="form-label">
+              Interview Type
+            </label>
+
+
+            <select
+              v-model="interviewType"
+              class="form-select"
             >
 
-              Cancel
+              <option value="">
+                Select type
+              </option>
 
-            </button>
+              <option value="Online">
+                Online
+              </option>
 
+              <option value="Offline">
+                Offline
+              </option>
 
-            <button
-              type="button"
-              class="btn btn-primary"
-              :disabled="scheduling"
-              @click="scheduleInterview"
-            >
+              <option value="Phone">
+                Phone
+              </option>
 
-              <span
-                v-if="scheduling"
-                class="spinner-border spinner-border-sm me-1"
-              ></span>
-
-              {{ scheduling ? "Scheduling..." : "Schedule Interview" }}
-
-            </button>
+            </select>
 
           </div>
+
+
+          <!-- Remarks -->
+
+          <div class="mb-3">
+
+            <label class="form-label">
+              Remarks
+            </label>
+
+
+            <textarea
+              v-model="remarks"
+              class="form-control"
+              rows="3"
+              placeholder="Enter interview details or remarks..."
+            ></textarea>
+
+          </div>
+
+        </div>
+
+
+        <!-- =========================
+             MODAL FOOTER
+        ========================== -->
+
+        <div class="modal-footer">
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            @click="closeInterview"
+          >
+
+            Cancel
+
+          </button>
+
+
+          <button
+            type="button"
+            class="btn btn-primary"
+            :disabled="scheduling"
+            @click="scheduleInterview"
+          >
+
+            <span
+              v-if="scheduling"
+              class="spinner-border spinner-border-sm me-1"
+            ></span>
+
+            {{
+              scheduling
+                ? "Scheduling..."
+                : "Schedule Interview"
+            }}
+
+          </button>
 
         </div>
 
@@ -503,12 +551,9 @@
 
 import { ref, onMounted } from "vue"
 
-import {
-  useRoute,
-  useRouter
-} from "vue-router"
+import { useRoute, useRouter } from "vue-router"
 
-import api from "../../services/api"
+import axios from "axios"
 
 
 // =========================================================
@@ -521,7 +566,14 @@ const router = useRouter()
 
 
 // =========================================================
-// APPLICANTS
+// DRIVE ID
+// =========================================================
+
+const driveId = route.params.id
+
+
+// =========================================================
+// STATE
 // =========================================================
 
 const applicants = ref([])
@@ -530,14 +582,14 @@ const loading = ref(true)
 
 const error = ref("")
 
+
+// Application IDs whose interviews
+// have already been scheduled
+const scheduledInterviews = ref([])
+
+
+// Currently processing status update
 const processingId = ref(null)
-
-
-// =========================================================
-// DRIVE ID
-// =========================================================
-
-const driveId = route.params.id
 
 
 // =========================================================
@@ -558,7 +610,35 @@ const scheduling = ref(false)
 
 
 // =========================================================
-// LOAD APPLICANTS FOR THIS DRIVE
+// BACKEND URL
+// =========================================================
+
+const BACKEND_URL =
+  "http://localhost:5000"
+
+
+// =========================================================
+// GET AUTH HEADERS
+// =========================================================
+
+function getHeaders() {
+
+  return {
+
+    headers: {
+
+      Authorization:
+        `Bearer ${localStorage.getItem("token")}`
+
+    }
+
+  }
+
+}
+
+
+// =========================================================
+// LOAD APPLICANTS
 // =========================================================
 
 async function loadApplicants() {
@@ -580,28 +660,56 @@ async function loadApplicants() {
     }
 
 
-    const response = await api.get(
+    const response = await axios.get(
 
-      `/company/drives/${driveId}/applicants`
+      `/api/company/drives/${driveId}/applicants`,
+
+      getHeaders()
 
     )
 
 
-    if (Array.isArray(response.data)) {
+    applicants.value =
+      Array.isArray(response.data)
+        ? response.data
+        : []
 
-      applicants.value =
-        response.data
 
-    } else {
+    /*
+      Check which applicants already
+      have an interview scheduled.
 
-      applicants.value = []
+      This expects the backend applicants
+      API to return something like:
 
-    }
+      {
+        application_id: 1,
+        interview_scheduled: true
+      }
+
+      OR:
+
+      {
+        application_id: 1,
+        interview: {...}
+      }
+    */
+
+    scheduledInterviews.value =
+      applicants.value
+        .filter(student =>
+          student.interview_scheduled === true ||
+          student.interview != null
+        )
+        .map(student =>
+          student.application_id
+        )
+
 
   } catch (err) {
 
     console.error(
-      "Failed to load applicants:",
+      "Error loading applicants:",
       err
     )
 
@@ -634,24 +742,28 @@ async function updateStatus(
 
   try {
 
-    await api.put(
+    await axios.put(
 
-      `/company/applications/${applicationId}/status`,
+      `/api/company/applications/${applicationId}/status`,
 
       {
         status: status
-      }
+      },
+
+      getHeaders()
 
     )
 
 
+    /*
+      Update UI immediately
+    */
+
     const applicant =
       applicants.value.find(
-
         student =>
           student.application_id ===
           applicationId
-
       )
 
 
@@ -665,16 +777,14 @@ async function updateStatus(
   } catch (err) {
 
     console.error(
-      "Failed to update application status:",
+      "Error updating status:",
       err
     )
 
 
     alert(
-
       err.response?.data?.message ||
       "Failed to update application status."
-
     )
 
   } finally {
@@ -695,13 +805,16 @@ function openInterview(student) {
   selectedStudent.value =
     student
 
+
   interviewDate.value = ""
 
   interviewType.value = ""
 
   remarks.value = ""
 
-  showInterview.value = true
+
+  showInterview.value =
+    true
 
 }
 
@@ -712,15 +825,22 @@ function openInterview(student) {
 
 function closeInterview() {
 
-  showInterview.value = false
+  showInterview.value =
+    false
 
-  selectedStudent.value = null
 
-  interviewDate.value = ""
+  selectedStudent.value =
+    null
 
-  interviewType.value = ""
 
-  remarks.value = ""
+  interviewDate.value =
+    ""
+
+  interviewType.value =
+    ""
+
+  remarks.value =
+    ""
 
 }
 
@@ -764,21 +884,19 @@ async function scheduleInterview() {
   }
 
 
-  scheduling.value = true
+  scheduling.value =
+    true
 
 
   try {
 
-    /*
-      Backend endpoint expected:
+    const applicationId =
+      selectedStudent.value.application_id
 
-      POST
-      /company/applications/<application_id>/interview
-    */
 
-    const response = await api.post(
+    await axios.post(
 
-      `/company/applications/${selectedStudent.value.application_id}/interview`,
+      `/api/company/applications/${applicationId}/interview`,
 
       {
 
@@ -791,39 +909,72 @@ async function scheduleInterview() {
         remarks:
           remarks.value
 
-      }
+      },
+
+      getHeaders()
 
     )
 
 
-    alert(
+    /*
+      IMPORTANT:
 
-      response.data?.message ||
-      "Interview scheduled successfully."
+      Add application ID to the
+      scheduled interviews list.
 
-    )
+      This immediately changes:
 
+      Schedule Interview
+              ↓
+      ✓ Interview Scheduled
+    */
+
+    if (
+      !scheduledInterviews.value.includes(
+        applicationId
+      )
+    ) {
+
+      scheduledInterviews.value.push(
+        applicationId
+      )
+
+    }
+
+
+    /*
+      Close modal
+    */
 
     closeInterview()
+
+
+    /*
+      Success message
+    */
+
+    alert(
+      "Interview scheduled successfully."
+    )
+
 
   } catch (err) {
 
     console.error(
-      "Failed to schedule interview:",
+      "Error scheduling interview:",
       err
     )
 
 
     alert(
-
       err.response?.data?.message ||
       "Failed to schedule interview."
-
     )
 
   } finally {
 
-    scheduling.value = false
+    scheduling.value =
+      false
 
   }
 
@@ -894,12 +1045,12 @@ function getResumeUrl(resume) {
     resume.startsWith("/uploads/")
   ) {
 
-    return `http://127.0.0.1:5000${resume}`
+    return `${BACKEND_URL}${resume}`
 
   }
 
 
-  return `http://127.0.0.1:5000/uploads/${encodeURIComponent(resume)}`
+  return `${BACKEND_URL}/uploads/${encodeURIComponent(resume)}`
 
 }
 
@@ -918,7 +1069,7 @@ function goBack() {
 
 
 // =========================================================
-// INITIAL LOAD
+// LOAD PAGE
 // =========================================================
 
 onMounted(() => {
@@ -928,3 +1079,4 @@ onMounted(() => {
 })
 
 </script>
+

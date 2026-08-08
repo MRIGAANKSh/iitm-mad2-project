@@ -23,7 +23,8 @@ from app.models import (
     CompanyProfile,
     PlacementDrive,
     Application,
-    Notification
+    Notification,
+    Interview
 )
 @student_bp.route("/dashboard")
 @jwt_required()
@@ -182,7 +183,7 @@ def apply(id):
 
 @student_bp.route("/applications")
 @jwt_required()
-def applications():
+def student_applications():
 
     user_id = get_jwt_identity()
 
@@ -190,16 +191,16 @@ def applications():
         user_id=user_id
     ).first_or_404()
 
-    apps = Application.query.filter_by(
+    applications = Application.query.filter_by(
         student_id=student.id
     ).all()
 
     result = []
 
-    for app in apps:
+    for application in applications:
 
         drive = PlacementDrive.query.get(
-            app.drive_id
+            application.drive_id
         )
 
         if not drive:
@@ -209,23 +210,67 @@ def applications():
             drive.company_id
         )
 
-        if not company:
-            continue
+        # Find interview for this application
+        interview = Interview.query.filter_by(
+            application_id=application.id
+        ).order_by(
+            Interview.id.desc()
+        ).first()
+
+        interview_data = None
+
+        if interview:
+
+            interview_data = {
+
+                "id": interview.id,
+
+                "date":
+                    interview.interview_date.isoformat()
+                    if interview.interview_date
+                    else None,
+
+                "type":
+                    interview.interview_type,
+
+                "status":
+                    interview.status,
+
+                "remarks":
+                    interview.remarks
+
+            }
 
         result.append({
 
-            "company": company.company_name,
+            "application_id":
+                application.id,
 
-            "job_title": drive.job_title,
+            "drive_id":
+                drive.id,
 
-            "status": app.status,
+            "company":
+                company.company_name,
 
-            # FIX: use applied_at
-            "date": str(app.applied_at)
+            "job_title":
+                drive.job_title,
+
+            "date":
+                application.applied_at.isoformat()
+                if application.applied_at
+                else None,
+
+            "status":
+                application.status,
+
+            "interview":
+                interview_data
 
         })
 
-    return jsonify(result), 200
+    return jsonify(result)
+
+
 @student_bp.route("/history")
 @jwt_required()
 @role_required("student")
