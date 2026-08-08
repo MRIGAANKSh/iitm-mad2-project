@@ -2,8 +2,7 @@ from flask import Flask
 
 from config import Config
 
-from app.extensions import db
-from app.extensions import jwt
+from app.extensions import db, jwt, cache
 from app.extensions import cors
 
 from app.admin import admin_bp
@@ -21,7 +20,7 @@ def create_app():
     app.config.from_object(Config)
 
     db.init_app(app)
-
+    cache.init_app(app)
     jwt.init_app(app)
 
     cors.init_app(app)

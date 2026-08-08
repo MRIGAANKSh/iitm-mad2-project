@@ -1,7 +1,7 @@
 
 from flask import jsonify, request
 from datetime import datetime
-
+from app.extensions import cache
 from flask_jwt_extended import (
     get_jwt_identity,
     jwt_required
@@ -887,7 +887,7 @@ def edit_drive(id):
 
 
     db.session.commit()
-
+    cache.delete("approved_drives")
 
     return jsonify({
 

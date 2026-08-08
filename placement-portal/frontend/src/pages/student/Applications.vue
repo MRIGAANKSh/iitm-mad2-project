@@ -1,130 +1,135 @@
 
 <template>
 
-  <div class="container">
-
-    <!-- Page Title -->
-    <h2 class="mb-4">
-      My Applications
-    </h2>
+  <!-- Page Title -->
+  <h2 class="mb-4">
+    My Applications
+  </h2>
 
 
-    <!-- Loading -->
+  <!-- Export Button -->
+  <button
+    class="btn btn-success mb-3"
+    @click="exportApplications"
+  >
+    Export Applications CSV
+  </button>
+
+
+  <!-- Loading -->
+  <div
+    v-if="loading"
+    class="text-center py-5"
+  >
+
     <div
-      v-if="loading"
-      class="text-center py-5"
+      class="spinner-border text-primary"
+      role="status"
+    ></div>
+
+    <p class="mt-2">
+      Loading applications...
+    </p>
+
+  </div>
+
+
+  <!-- Error -->
+  <div
+    v-else-if="error"
+    class="alert alert-danger"
+  >
+    {{ error }}
+  </div>
+
+
+  <!-- Applications -->
+  <div v-else>
+
+    <!-- No Applications -->
+    <div
+      v-if="applications.length === 0"
+      class="alert alert-info"
     >
-
-      <div
-        class="spinner-border text-primary"
-        role="status"
-      ></div>
-
-      <p class="mt-2">
-        Loading applications...
-      </p>
-
+      You have not applied to any placement drives yet.
     </div>
 
 
-    <!-- Error -->
+    <!-- Applications Table -->
     <div
-      v-else-if="error"
-      class="alert alert-danger"
+      v-else
+      class="table-responsive"
     >
-      {{ error }}
-    </div>
+
+      <table class="table table-bordered table-hover">
+
+        <thead class="table-dark">
+
+          <tr>
+
+            <th>
+              Company
+            </th>
+
+            <th>
+              Job
+            </th>
+
+            <th>
+              Status
+            </th>
+
+            <th>
+              Applied Date
+            </th>
+
+          </tr>
+
+        </thead>
 
 
-    <!-- Applications -->
-    <div v-else>
+        <tbody>
 
-      <!-- No Applications -->
-      <div
-        v-if="applications.length === 0"
-        class="alert alert-info"
-      >
-        You have not applied to any placement drives yet.
-      </div>
+          <tr
+            v-for="(app, index) in applications"
+            :key="index"
+          >
 
-
-      <!-- Applications Table -->
-      <div
-        v-else
-        class="table-responsive"
-      >
-
-        <table class="table table-bordered table-hover">
-
-          <thead class="table-dark">
-
-            <tr>
-
-              <th>
-                Company
-              </th>
-
-              <th>
-                Job
-              </th>
-
-              <th>
-                Status
-              </th>
-
-              <th>
-                Applied Date
-              </th>
-
-            </tr>
-
-          </thead>
+            <!-- Company -->
+            <td>
+              {{ app.company || "N/A" }}
+            </td>
 
 
-          <tbody>
-
-            <tr
-              v-for="(app, index) in applications"
-              :key="index"
-            >
-
-              <!-- Company -->
-              <td>
-                {{ app.company || "N/A" }}
-              </td>
+            <!-- Job -->
+            <td>
+              {{ app.job_title || "N/A" }}
+            </td>
 
 
-              <!-- Job -->
-              <td>
-                {{ app.job_title || "N/A" }}
-              </td>
+            <!-- Status -->
+            <td>
+
+              <span
+                class="badge"
+                :class="getStatusClass(app.status)"
+              >
+                {{ app.status || "Applied" }}
+              </span>
+
+            </td>
 
 
-              <!-- Status -->
-              <td>
+            <!-- Date -->
+            <td>
+              {{ app.date || "N/A" }}
+            </td>
 
-                <span
-                  class="badge"
-                  :class="getStatusClass(app.status)"
-                >
-                  {{ app.status || "Applied" }}
-                </span>
+          </tr>
 
-              </td>
+        </tbody>
 
-
-              <!-- Date -->
-              <td>
-                {{ app.date || "N/A" }}
-              </td>
-
-            </tr>
-
-          </tbody>
-
-        </table>
-
-      </div>
+      </table>
 
     </div>
 
@@ -140,19 +145,60 @@ import { ref, onMounted } from "vue"
 import api from "../../services/api"
 
 
-// Applications
+// =========================================================
+// STATE
+// =========================================================
+
 const applications = ref([])
 
-
-// Loading state
 const loading = ref(true)
 
-
-// Error state
 const error = ref("")
 
 
-// Status badge
+// =========================================================
+// LOAD APPLICATIONS
+// =========================================================
+
+async function loadApplications() {
+
+  try {
+
+    loading.value = true
+
+    const response = await api.get(
+      "/student/applications"
+    )
+
+    applications.value =
+      Array.isArray(response.data)
+        ? response.data
+        : []
+
+  } catch (err) {
+
+    console.error(
+      "Error loading applications:",
+      err
+    )
+
+    error.value =
+      err.response?.data?.message ||
+      "Failed to load applications."
+
+  } finally {
+
+    loading.value = false
+
+  }
+
+}
+
+
+// =========================================================
+// STATUS CLASS
+// =========================================================
+
 function getStatusClass(status) {
 
   switch (status) {
@@ -160,11 +206,11 @@ function getStatusClass(status) {
     case "Selected":
       return "bg-success"
 
-    case "Shortlisted":
-      return "bg-warning text-dark"
-
     case "Rejected":
       return "bg-danger"
+
+    case "Shortlisted":
+      return "bg-warning text-dark"
 
     case "Applied":
       return "bg-primary"
@@ -177,69 +223,74 @@ function getStatusClass(status) {
 }
 
 
-// Load applications
-async function loadApplications() {
+// =========================================================
+// EXPORT APPLICATIONS
+// =========================================================
 
-  loading.value = true
+async function exportApplications() {
 
-  error.value = ""
+    try {
 
-  try {
-
-    const response = await api.get(
-      "/student/applications"
-    )
-
-
-    console.log(
-      "Student Applications:",
-      response.data
-    )
+        const response = await api.post(
+            "/student/applications/export",
+            {},
+            {
+                responseType: "blob"
+            }
+        );
 
 
-    // Make sure response is an array
-    if (Array.isArray(response.data)) {
+        const blob = new Blob(
+            [response.data],
+            {
+                type: "text/csv"
+            }
+        );
 
-      applications.value = response.data
 
-    } else {
+        const url =
+            window.URL.createObjectURL(blob);
 
-      applications.value = []
 
-      error.value =
-        "Invalid applications response from server."
+        const link =
+            document.createElement("a");
 
+
+        link.href = url;
+
+        link.download =
+            "my_applications.csv";
+
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        document.body.removeChild(link);
+
+
+        window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+
+        console.error(
+            "Export failed:",
+            error
+        );
+
+
+        alert(
+            "Application export failed."
+        );
     }
-
-  } catch (err) {
-
-    console.error(
-      "Failed to load applications:",
-      err
-    )
-
-
-    if (err.response) {
-
-      error.value =
-        err.response.data?.message ||
-        `Failed to load applications (${err.response.status})`
-
-    } else {
-
-      error.value =
-        "Unable to connect to the server."
-
-    }
-
-  } finally {
-
-    loading.value = false
-
-  }
-
 }
 
+
+
+
+// =========================================================
+// LOAD PAGE
+// =========================================================
 
 onMounted(() => {
 

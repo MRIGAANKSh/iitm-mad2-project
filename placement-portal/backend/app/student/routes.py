@@ -1,6 +1,8 @@
-from flask import jsonify, request
+from flask import jsonify, request, Response
+import csv
+import io
 import os
-
+from app.extensions import cache
 from werkzeug.utils import secure_filename
 
 from flask import current_app
@@ -20,7 +22,8 @@ from app.models import (
     StudentProfile,
     CompanyProfile,
     PlacementDrive,
-    Application
+    Application,
+    Notification
 )
 @student_bp.route("/dashboard")
 @jwt_required()
@@ -339,9 +342,17 @@ def update_profile():
 
     })
 
+# =========================================================
+# GET APPROVED DRIVES
+# =========================================================
+
 @student_bp.route("/drives")
 @jwt_required()
 def approved_drives():
+
+    # -----------------------------------------------------
+    # Get logged-in student
+    # -----------------------------------------------------
 
     user_id = get_jwt_identity()
 
@@ -349,91 +360,220 @@ def approved_drives():
         user_id=user_id
     ).first_or_404()
 
-    search = request.args.get("search", "")
-    branch = request.args.get("branch", "")
-    min_cgpa = request.args.get("min_cgpa", type=float)
 
-    query = PlacementDrive.query.filter_by(
-        status="approved"
+    # -----------------------------------------------------
+    # Get filters
+    # -----------------------------------------------------
+
+    search = request.args.get(
+        "search",
+        ""
     )
 
-    # Search by job title
-    if search:
-        query = query.filter(
-            PlacementDrive.job_title.ilike(
-                f"%{search}%"
+    branch = request.args.get(
+        "branch",
+        ""
+    )
+
+    min_cgpa = request.args.get(
+        "min_cgpa",
+        type=float
+    )
+
+
+    # =====================================================
+    # GET APPROVED DRIVES FROM CACHE
+    # =====================================================
+
+    cached_drives = cache.get(
+        "approved_drives"
+    )
+
+
+    if cached_drives is None:
+
+        print(
+            "CACHE MISS - Loading drives from database"
+        )
+
+
+        # -------------------------------------------------
+        # Query approved drives
+        # -------------------------------------------------
+
+        drives = PlacementDrive.query.filter_by(
+            status="approved"
+        ).all()
+
+
+        cached_drives = []
+
+
+        # -------------------------------------------------
+        # Prepare shared drive data
+        # -------------------------------------------------
+
+        for drive in drives:
+
+            company = CompanyProfile.query.get(
+                drive.company_id
             )
+
+
+            if not company:
+                continue
+
+
+            cached_drives.append({
+
+                "id": drive.id,
+
+                "company":
+                    company.company_name,
+
+                "job_title":
+                    drive.job_title,
+
+                "job_description":
+                    drive.job_description,
+
+                "eligibility_branch":
+                    drive.eligibility_branch,
+
+                "minimum_cgpa":
+                    drive.minimum_cgpa,
+
+                "graduation_year":
+                    drive.graduation_year,
+
+                "deadline":
+                    str(
+                        drive.application_deadline
+                    ),
+
+                "salary":
+                    drive.salary,
+
+                "location":
+                    drive.location,
+
+                "employment_type":
+                    drive.employment_type,
+
+                "vacancies":
+                    drive.vacancies
+
+            })
+
+
+        # -------------------------------------------------
+        # Store approved drives in cache
+        # -------------------------------------------------
+
+        cache.set(
+
+            "approved_drives",
+
+            cached_drives,
+
+            timeout=300
+
         )
 
-    # Branch filtering
-    if branch:
-        query = query.filter(
-            PlacementDrive.eligibility_branch.ilike(
-                f"%{branch}%"
-            )
+
+    else:
+
+        print(
+            "CACHE HIT - Loading drives from cache"
         )
 
-    # CGPA filtering
-    if min_cgpa is not None:
-        query = query.filter(
-            PlacementDrive.minimum_cgpa <= min_cgpa
-        )
 
-    drives = query.all()
+    # =====================================================
+    # APPLY FILTERS
+    # =====================================================
 
-    data = []
+    result = []
 
-    for drive in drives:
 
-        company = CompanyProfile.query.get(
-            drive.company_id
-        )
+    for drive in cached_drives:
+
+
+        # -------------------------------------------------
+        # Search by job title
+        # -------------------------------------------------
+
+        if search:
+
+            if search.lower() not in (
+                drive["job_title"] or ""
+            ).lower():
+
+                continue
+
+
+        # -------------------------------------------------
+        # Branch filter
+        # -------------------------------------------------
+
+        if branch:
+
+            if branch.lower() not in (
+                drive["eligibility_branch"] or ""
+            ).lower():
+
+                continue
+
+
+        # -------------------------------------------------
+        # CGPA filter
+        # -------------------------------------------------
+
+        if min_cgpa is not None:
+
+            if (
+                drive["minimum_cgpa"]
+                is not None
+                and
+                drive["minimum_cgpa"]
+                > min_cgpa
+            ):
+
+                continue
+
+
+        # =================================================
+        # CHECK WHETHER CURRENT STUDENT APPLIED
+        # =================================================
 
         applied = Application.query.filter_by(
-            drive_id=drive.id,
+
+            drive_id=drive["id"],
+
             student_id=student.id
+
         ).first()
 
-        data.append({
 
-            "id": drive.id,
+        # -------------------------------------------------
+        # Add student-specific field
+        # -------------------------------------------------
 
-            "company": company.company_name,
+        result.append({
 
-            "job_title": drive.job_title,
-
-            "job_description": drive.job_description,
-
-            "eligibility_branch":
-                drive.eligibility_branch,
-
-            "minimum_cgpa":
-                drive.minimum_cgpa,
-
-            "graduation_year":
-                drive.graduation_year,
-
-            "deadline":
-                str(drive.application_deadline),
-
-            "salary":
-                drive.salary,
-
-            "location":
-                drive.location,
-
-            "employment_type":
-                drive.employment_type,
-
-            "vacancies":
-                drive.vacancies,
+            **drive,
 
             "already_applied":
                 applied is not None
 
         })
 
-    return jsonify(data)
+
+    # =====================================================
+    # RETURN RESULT
+    # =====================================================
+
+    return jsonify(result), 200
+
 
 @student_bp.route(
     "/upload-resume",
@@ -510,3 +650,170 @@ def get_resume():
         "resume":student.resume
 
     })
+
+
+
+# =========================================================
+# EXPORT APPLICATIONS
+# =========================================================
+
+@student_bp.route(
+    "/applications/export",
+    methods=["POST"]
+)
+@jwt_required()
+def export_applications():
+
+    user_id = get_jwt_identity()
+
+
+    # -----------------------------------------------------
+    # Get logged-in student
+    # -----------------------------------------------------
+
+    student = StudentProfile.query.filter_by(
+        user_id=user_id
+    ).first_or_404()
+
+
+    # -----------------------------------------------------
+    # Get student's applications
+    # -----------------------------------------------------
+
+    apps = Application.query.filter_by(
+        student_id=student.id
+    ).all()
+
+
+    # -----------------------------------------------------
+    # No applications
+    # -----------------------------------------------------
+
+    if not apps:
+
+        return jsonify({
+            "message":
+                "You have no applications to export."
+        }), 404
+
+
+    # -----------------------------------------------------
+    # Create CSV in memory
+    # -----------------------------------------------------
+
+    output = io.StringIO()
+
+    writer = csv.writer(output)
+
+
+    # -----------------------------------------------------
+    # CSV header
+    # -----------------------------------------------------
+
+    writer.writerow([
+        "Company",
+        "Job Title",
+        "Status",
+        "Applied Date"
+    ])
+
+
+    # -----------------------------------------------------
+    # Add applications
+    # -----------------------------------------------------
+
+    for app in apps:
+
+        drive = PlacementDrive.query.get(
+            app.drive_id
+        )
+
+        if not drive:
+            continue
+
+
+        company = CompanyProfile.query.get(
+            drive.company_id
+        )
+
+        company_name = (
+            company.company_name
+            if company
+            else "N/A"
+        )
+
+
+        applied_date = (
+            str(app.applied_at)
+            if app.applied_at
+            else "N/A"
+        )
+
+
+        writer.writerow([
+
+            company_name,
+
+            drive.job_title
+            if drive.job_title
+            else "N/A",
+
+            app.status
+            if app.status
+            else "Applied",
+
+            applied_date
+
+        ])
+
+
+    # -----------------------------------------------------
+    # Reset CSV pointer
+    # -----------------------------------------------------
+
+    output.seek(0)
+
+
+    # -----------------------------------------------------
+    # Send CSV to browser
+    # -----------------------------------------------------
+
+    return Response(
+
+        output.getvalue(),
+
+        mimetype="text/csv",
+
+        headers={
+            "Content-Disposition":
+                "attachment; filename=my_applications.csv"
+        }
+
+    )
+
+
+
+@student_bp.route("/notifications")
+@jwt_required()
+def get_notifications():
+
+    user_id = get_jwt_identity()
+
+    notifications = Notification.query.filter_by(
+        user_id=user_id
+    ).order_by(
+        Notification.created_at.desc()
+    ).all()
+
+    result = []
+
+    for notification in notifications:
+
+        result.append({
+            "id": notification.id,
+            "message": notification.message,
+            "is_read": notification.is_read,
+            "created_at": str(notification.created_at)
+        })
+
+    return jsonify(result)

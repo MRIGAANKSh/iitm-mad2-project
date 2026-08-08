@@ -1,7 +1,7 @@
 from flask import jsonify, request
 
 from app.admin import admin_bp
-
+from app.extensions import cache
 from app.utils import role_required
 
 from app.extensions import db
@@ -296,9 +296,9 @@ def approve_drive(id):
     drive = PlacementDrive.query.get_or_404(id)
 
     drive.status = "approved"
-
+   
     db.session.commit()
-
+    cache.delete("approved_drives")
     return jsonify({
         "message": "Drive Approved"
     })
@@ -311,9 +311,9 @@ def reject_drive(id):
     drive = PlacementDrive.query.get_or_404(id)
 
     drive.status = "rejected"
-
+    
     db.session.commit()
-
+    cache.delete("approved_drives")
     return jsonify({
         "message": "Drive Rejected"
     })
