@@ -3,9 +3,9 @@
 
   <div>
 
-    <!-- ============================= -->
-    <!-- Page Header -->
-    <!-- ============================= -->
+    <!-- =============================
+         PAGE HEADER
+    ============================== -->
 
     <div class="mb-4">
 
@@ -20,20 +20,24 @@
     </div>
 
 
-    <!-- ============================= -->
-    <!-- Statistics -->
-    <!-- ============================= -->
+    <!-- =============================
+         MAIN STATISTICS
+    ============================== -->
 
     <div class="row g-4 mb-4">
 
+
       <!-- Students -->
+
       <div class="col-lg-3 col-md-6">
 
         <div class="card border-0 shadow-sm h-100">
 
           <div class="card-body">
 
-            <div class="d-flex justify-content-between align-items-center">
+            <div
+              class="d-flex justify-content-between align-items-center"
+            >
 
               <div>
 
@@ -47,10 +51,7 @@
 
               </div>
 
-              <div class="fs-1">
-                
-              </div>
-
+             
             </div>
 
           </div>
@@ -61,13 +62,16 @@
 
 
       <!-- Companies -->
+
       <div class="col-lg-3 col-md-6">
 
         <div class="card border-0 shadow-sm h-100">
 
           <div class="card-body">
 
-            <div class="d-flex justify-content-between align-items-center">
+            <div
+              class="d-flex justify-content-between align-items-center"
+            >
 
               <div>
 
@@ -81,9 +85,7 @@
 
               </div>
 
-              <div class="fs-1">
-                
-              </div>
+              
 
             </div>
 
@@ -95,13 +97,16 @@
 
 
       <!-- Placement Drives -->
+
       <div class="col-lg-3 col-md-6">
 
         <div class="card border-0 shadow-sm h-100">
 
           <div class="card-body">
 
-            <div class="d-flex justify-content-between align-items-center">
+            <div
+              class="d-flex justify-content-between align-items-center"
+            >
 
               <div>
 
@@ -115,9 +120,7 @@
 
               </div>
 
-              <div class="fs-1">
-                
-              </div>
+              
 
             </div>
 
@@ -129,13 +132,16 @@
 
 
       <!-- Applications -->
+
       <div class="col-lg-3 col-md-6">
 
         <div class="card border-0 shadow-sm h-100">
 
           <div class="card-body">
 
-            <div class="d-flex justify-content-between align-items-center">
+            <div
+              class="d-flex justify-content-between align-items-center"
+            >
 
               <div>
 
@@ -149,8 +155,449 @@
 
               </div>
 
-              <div class="fs-1">
-                
+             
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ==========================================
+         APPLICATION ANALYTICS
+    =========================================== -->
+
+    <div class="card border-0 shadow-sm mb-4">
+
+      <div class="card-body">
+
+        <!-- Analytics Header -->
+
+        <div
+          class="d-flex justify-content-between align-items-center mb-4"
+        >
+
+          <div>
+
+            <h5 class="fw-bold mb-1">
+               Application Analytics
+            </h5>
+
+            <p class="text-muted mb-0">
+              Overview of application statuses
+            </p>
+
+          </div>
+
+
+          <button
+            class="btn btn-outline-primary btn-sm"
+            @click="loadApplicationStats"
+          >
+
+            🔄 Refresh
+
+          </button>
+
+        </div>
+
+
+        <!-- Analytics Loading -->
+
+        <div
+          v-if="loadingApplicationStats"
+          class="text-center py-4"
+        >
+
+          <div
+            class="spinner-border text-primary"
+            role="status"
+          ></div>
+
+          <p class="text-muted mt-2 mb-0">
+            Loading application analytics...
+          </p>
+
+        </div>
+
+
+        <!-- Analytics Content -->
+
+        <div v-else>
+
+
+          <div class="row g-3">
+
+
+            <!-- Total -->
+
+            <div class="col-lg col-md-6">
+
+              <div
+                class="border rounded p-3 h-100"
+              >
+
+                <div
+                  class="d-flex justify-content-between align-items-center"
+                >
+
+                  <div>
+
+                    <small class="text-muted">
+                      Total
+                    </small>
+
+                    <h3 class="fw-bold mb-0">
+                      {{ applicationStats.total }}
+                    </h3>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <!-- Applied -->
+
+            <div class="col-lg col-md-6">
+
+              <div
+                class="border rounded p-3 h-100"
+              >
+
+                <div
+                  class="d-flex justify-content-between align-items-center"
+                >
+
+                  <div>
+
+                    <small class="text-muted">
+                      Applied
+                    </small>
+
+                    <h3 class="fw-bold text-primary mb-0">
+                      {{ applicationStats.applied }}
+                    </h3>
+
+                  </div>
+
+                 
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <!-- Shortlisted -->
+
+            <div class="col-lg col-md-6">
+
+              <div
+                class="border rounded p-3 h-100"
+              >
+
+                <div
+                  class="d-flex justify-content-between align-items-center"
+                >
+
+                  <div>
+
+                    <small class="text-muted">
+                      Shortlisted
+                    </small>
+
+                    <h3
+                      class="fw-bold text-warning mb-0"
+                    >
+                      {{ applicationStats.shortlisted }}
+                    </h3>
+
+                  </div>
+
+                  
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <!-- Selected -->
+
+            <div class="col-lg col-md-6">
+
+              <div
+                class="border rounded p-3 h-100"
+              >
+
+                <div
+                  class="d-flex justify-content-between align-items-center"
+                >
+
+                  <div>
+
+                    <small class="text-muted">
+                      Selected
+                    </small>
+
+                    <h3
+                      class="fw-bold text-success mb-0"
+                    >
+                      {{ applicationStats.selected }}
+                    </h3>
+
+                  </div>
+
+                 
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <!-- Rejected -->
+
+            <div class="col-lg col-md-6">
+
+              <div
+                class="border rounded p-3 h-100"
+              >
+
+                <div
+                  class="d-flex justify-content-between align-items-center"
+                >
+
+                  <div>
+
+                    <small class="text-muted">
+                      Rejected
+                    </small>
+
+                    <h3
+                      class="fw-bold text-danger mb-0"
+                    >
+                      {{ applicationStats.rejected }}
+                    </h3>
+
+                  </div>
+
+                  
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- ======================================
+               SELECTION RATE
+          ======================================= -->
+
+          <div class="mt-4">
+
+            <div
+              class="d-flex justify-content-between align-items-center mb-2"
+            >
+
+              <div>
+
+                <strong>
+                  Selection Rate
+                </strong>
+
+                <small class="text-muted ms-2">
+                  Selected / Total Applications
+                </small>
+
+              </div>
+
+
+              <strong class="text-success">
+
+                {{
+                  applicationStats.total
+                    ? Math.round(
+                        (
+                          applicationStats.selected /
+                          applicationStats.total
+                        ) * 100
+                      )
+                    : 0
+                }}%
+
+              </strong>
+
+            </div>
+
+
+            <div
+              class="progress"
+              style="height: 18px;"
+            >
+
+              <div
+                class="progress-bar bg-success"
+                role="progressbar"
+                :style="{
+                  width:
+                    (
+                      applicationStats.total
+                        ? (
+                            applicationStats.selected /
+                            applicationStats.total
+                          ) * 100
+                        : 0
+                    ) + '%'
+                }"
+              ></div>
+
+            </div>
+
+          </div>
+
+
+          <!-- ======================================
+               STATUS DISTRIBUTION
+          ======================================= -->
+
+          <div class="row mt-4 g-3">
+
+
+            <div class="col-md-6">
+
+              <div class="small text-muted mb-1">
+                Applied
+              </div>
+
+              <div
+                class="progress"
+                style="height: 10px;"
+              >
+
+                <div
+                  class="progress-bar bg-primary"
+                  :style="{
+                    width:
+                      (
+                        applicationStats.total
+                          ? (
+                              applicationStats.applied /
+                              applicationStats.total
+                            ) * 100
+                          : 0
+                      ) + '%'
+                  }"
+                ></div>
+
+              </div>
+
+            </div>
+
+
+            <div class="col-md-6">
+
+              <div class="small text-muted mb-1">
+                Shortlisted
+              </div>
+
+              <div
+                class="progress"
+                style="height: 10px;"
+              >
+
+                <div
+                  class="progress-bar bg-warning"
+                  :style="{
+                    width:
+                      (
+                        applicationStats.total
+                          ? (
+                              applicationStats.shortlisted /
+                              applicationStats.total
+                            ) * 100
+                          : 0
+                      ) + '%'
+                  }"
+                ></div>
+
+              </div>
+
+            </div>
+
+
+            <div class="col-md-6">
+
+              <div class="small text-muted mb-1">
+                Selected
+              </div>
+
+              <div
+                class="progress"
+                style="height: 10px;"
+              >
+
+                <div
+                  class="progress-bar bg-success"
+                  :style="{
+                    width:
+                      (
+                        applicationStats.total
+                          ? (
+                              applicationStats.selected /
+                              applicationStats.total
+                            ) * 100
+                          : 0
+                      ) + '%'
+                  }"
+                ></div>
+
+              </div>
+
+            </div>
+
+
+            <div class="col-md-6">
+
+              <div class="small text-muted mb-1">
+                Rejected
+              </div>
+
+              <div
+                class="progress"
+                style="height: 10px;"
+              >
+
+                <div
+                  class="progress-bar bg-danger"
+                  :style="{
+                    width:
+                      (
+                        applicationStats.total
+                          ? (
+                              applicationStats.rejected /
+                              applicationStats.total
+                            ) * 100
+                          : 0
+                      ) + '%'
+                  }"
+                ></div>
+
               </div>
 
             </div>
@@ -164,9 +611,9 @@
     </div>
 
 
-    <!-- ============================= -->
-    <!-- Pending Companies -->
-    <!-- ============================= -->
+    <!-- ==========================================
+         PENDING COMPANIES
+    =========================================== -->
 
     <div class="card border-0 shadow-sm">
 
@@ -191,7 +638,9 @@
           </div>
 
 
-          <span class="badge bg-warning text-dark px-3 py-2">
+          <span
+            class="badge bg-warning text-dark px-3 py-2"
+          >
 
             {{ pendingCompanies.length }}
 
@@ -237,7 +686,7 @@
       </div>
 
 
-      <!-- No pending companies -->
+      <!-- No Pending Companies -->
 
       <div
         v-else-if="pendingCompanies.length === 0"
@@ -245,7 +694,7 @@
       >
 
         <div class="fs-1 mb-2">
-          
+          ✓
         </div>
 
         <h6 class="fw-bold">
@@ -291,18 +740,22 @@
                   {{ company.hr_name || "N/A" }}
                 </span>
 
+
                 <span
                   v-if="company.website"
                   class="ms-3"
                 >
 
                   Website:
+
                   <a
                     :href="company.website"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
+
                     Visit Website
+
                   </a>
 
                 </span>
@@ -314,10 +767,16 @@
 
             <!-- Status -->
 
-            <div class="col-md-2 text-md-center my-2 my-md-0">
+            <div
+              class="col-md-2 text-md-center my-2 my-md-0"
+            >
 
-              <span class="badge bg-warning text-dark">
+              <span
+                class="badge bg-warning text-dark"
+              >
+
                 Pending
+
               </span>
 
             </div>
@@ -325,16 +784,22 @@
 
             <!-- Actions -->
 
-            <div class="col-md-3 text-md-end">
+            <div
+              class="col-md-3 text-md-end"
+            >
 
               <button
                 class="btn btn-success btn-sm me-2"
-                :disabled="processingCompany === company.id"
+                :disabled="
+                  processingCompany === company.id
+                "
                 @click="approveCompany(company.id)"
               >
 
                 <span
-                  v-if="processingCompany === company.id"
+                  v-if="
+                    processingCompany === company.id
+                  "
                   class="spinner-border spinner-border-sm me-1"
                 ></span>
 
@@ -345,7 +810,9 @@
 
               <button
                 class="btn btn-outline-danger btn-sm"
-                :disabled="processingCompany === company.id"
+                :disabled="
+                  processingCompany === company.id
+                "
                 @click="rejectCompany(company.id)"
               >
 
@@ -370,7 +837,10 @@
 
 <script setup>
 
-import { ref, onMounted } from "vue"
+import {
+  ref,
+  onMounted
+} from "vue"
 
 import api from "../../services/api"
 
@@ -390,6 +860,28 @@ const dashboard = ref({
   applications: 0
 
 })
+
+
+// ==========================================
+// Application Analytics
+// ==========================================
+
+const applicationStats = ref({
+
+  total: 0,
+
+  applied: 0,
+
+  shortlisted: 0,
+
+  selected: 0,
+
+  rejected: 0
+
+})
+
+
+const loadingApplicationStats = ref(false)
 
 
 // ==========================================
@@ -413,9 +905,11 @@ async function loadDashboard() {
 
   try {
 
-    const response = await api.get(
-      "/admin/dashboard"
-    )
+    const response =
+      await api.get(
+        "/admin/dashboard"
+      )
+
 
     dashboard.value = {
 
@@ -446,6 +940,57 @@ async function loadDashboard() {
 
 
 // ==========================================
+// Load Application Statistics
+// ==========================================
+
+async function loadApplicationStats() {
+
+  loadingApplicationStats.value = true
+
+  try {
+
+    const response =
+      await api.get(
+        "/admin/applications/stats"
+      )
+
+
+    applicationStats.value = {
+
+      total:
+        response.data.total ?? 0,
+
+      applied:
+        response.data.applied ?? 0,
+
+      shortlisted:
+        response.data.shortlisted ?? 0,
+
+      selected:
+        response.data.selected ?? 0,
+
+      rejected:
+        response.data.rejected ?? 0
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Application statistics loading failed:",
+      error
+    )
+
+  } finally {
+
+    loadingApplicationStats.value = false
+
+  }
+
+}
+
+
+// ==========================================
 // Load Pending Companies
 // ==========================================
 
@@ -457,9 +1002,11 @@ async function loadPendingCompanies() {
 
   try {
 
-    const response = await api.get(
-      "/admin/companies/pending"
-    )
+    const response =
+      await api.get(
+        "/admin/companies/pending"
+      )
+
 
     pendingCompanies.value =
       Array.isArray(response.data)
@@ -472,6 +1019,7 @@ async function loadPendingCompanies() {
       "Pending companies loading failed:",
       error
     )
+
 
     companyError.value =
       error.response?.data?.message ||
@@ -496,22 +1044,29 @@ async function approveCompany(id) {
 
   try {
 
-    const response = await api.put(
-      `/admin/companies/${id}/approve`
-    )
+    const response =
+      await api.put(
+        `/admin/companies/${id}/approve`
+      )
+
 
     alert(
       response.data.message ||
       "Company approved successfully."
     )
 
+
     // Remove company from pending list
+
     pendingCompanies.value =
       pendingCompanies.value.filter(
-        company => company.id !== id
+        company =>
+          company.id !== id
       )
 
+
     // Update company count
+
     dashboard.value.companies++
 
   } catch (error) {
@@ -520,6 +1075,7 @@ async function approveCompany(id) {
       "Company approval failed:",
       error
     )
+
 
     alert(
       error.response?.data?.message ||
@@ -545,19 +1101,24 @@ async function rejectCompany(id) {
 
   try {
 
-    const response = await api.put(
-      `/admin/companies/${id}/reject`
-    )
+    const response =
+      await api.put(
+        `/admin/companies/${id}/reject`
+      )
+
 
     alert(
       response.data.message ||
       "Company rejected successfully."
     )
 
+
     // Remove company from pending list
+
     pendingCompanies.value =
       pendingCompanies.value.filter(
-        company => company.id !== id
+        company =>
+          company.id !== id
       )
 
   } catch (error) {
@@ -566,6 +1127,7 @@ async function rejectCompany(id) {
       "Company rejection failed:",
       error
     )
+
 
     alert(
       error.response?.data?.message ||
@@ -589,8 +1151,11 @@ onMounted(() => {
 
   loadDashboard()
 
+  loadApplicationStats()
+
   loadPendingCompanies()
 
 })
 
 </script>
+

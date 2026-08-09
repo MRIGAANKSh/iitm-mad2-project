@@ -546,3 +546,115 @@ def activate_company(id):
             "Company activated successfully."
 
     })
+
+
+@admin_bp.route("/applications")
+@jwt_required()
+def applications():
+
+    claims = get_jwt()
+
+    if claims.get("role") != "admin":
+
+        return jsonify({
+            "message": "Admin access required."
+        }), 403
+
+    applications = Application.query.order_by(
+        Application.applied_at.desc()
+    ).all()
+
+    result = []
+
+    for application in applications:
+
+        student = StudentProfile.query.get(
+            application.student_id
+        )
+
+        drive = PlacementDrive.query.get(
+            application.drive_id
+        )
+
+        if not student or not drive:
+            continue
+
+        user = User.query.get(
+            student.user_id
+        )
+
+        company = CompanyProfile.query.get(
+            drive.company_id
+        )
+
+        result.append({
+
+            "id": application.id,
+
+            "student_name":
+                user.name if user else "",
+
+            "student_email":
+                user.email if user else "",
+
+            "student_id":
+                student.student_id,
+
+            "branch":
+                student.branch,
+
+            "cgpa":
+                student.cgpa,
+
+            "company":
+                company.company_name
+                if company else "",
+
+            "job_title":
+                drive.job_title,
+
+            "status":
+                application.status,
+
+            "applied_at":
+                application.applied_at.isoformat()
+                if application.applied_at
+                else None
+
+        })
+
+    return jsonify(result)
+
+
+@admin_bp.route("/applications/stats")
+@jwt_required()
+def application_stats():
+
+    claims = get_jwt()
+
+    if claims.get("role") != "admin":
+        return jsonify({
+            "message": "Admin access required."
+        }), 403
+
+    return jsonify({
+
+        "total": Application.query.count(),
+
+        "applied": Application.query.filter_by(
+            status="applied"
+        ).count(),
+
+        "shortlisted": Application.query.filter_by(
+            status="shortlisted"
+        ).count(),
+
+        "selected": Application.query.filter_by(
+            status="selected"
+        ).count(),
+
+        "rejected": Application.query.filter_by(
+            status="rejected"
+        ).count()
+
+    })

@@ -901,3 +901,17 @@ def mark_notification_read(id):
         "message": "Notification marked as read."
 
     })
+@student_bp.route("/notifications/unread-count")
+@jwt_required()
+def unread_notification_count():
+
+    user_id = get_jwt_identity()
+
+    count = Notification.query.filter_by(
+        user_id=user_id,
+        is_read=False
+    ).count()
+
+    return jsonify({
+        "count": count
+    })

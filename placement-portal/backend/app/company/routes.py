@@ -16,7 +16,8 @@ from app.models import (
     PlacementDrive,
     Application,
     Interview,
-    StudentProfile
+    StudentProfile,
+    Notification
 )
 
 
@@ -57,6 +58,8 @@ def dashboard():
         "total_applicants": total_applicants
 
     })
+
+
 @company_bp.route("/applications", methods=["GET"])
 @jwt_required()
 def company_applications():
@@ -497,6 +500,10 @@ def drive_applicants(drive_id):
 @jwt_required()
 def update_status(id):
 
+    # =====================================================
+    # GET LOGGED-IN COMPANY
+    # =====================================================
+
     user_id = get_jwt_identity()
 
     company = CompanyProfile.query.filter_by(
@@ -504,66 +511,169 @@ def update_status(id):
     ).first_or_404()
 
 
+    # =====================================================
+    # GET APPLICATION
+    # =====================================================
+
     application = Application.query.get_or_404(id)
 
-    # Get drive connected to application
+
+    # =====================================================
+    # CHECK THAT APPLICATION BELONGS TO COMPANY'S DRIVE
+    # =====================================================
+
     drive = PlacementDrive.query.filter_by(
         id=application.drive_id,
         company_id=company.id
     ).first()
+
 
     if not drive:
 
         return jsonify({
 
             "message":
-            "You are not authorized to update this application."
+                "You cannot modify this application."
 
         }), 403
 
 
+    # =====================================================
+    # GET REQUEST DATA
+    # =====================================================
+
     data = request.get_json()
 
-    if not data or not data.get("status"):
+
+    if not data:
 
         return jsonify({
 
             "message":
-            "Status is required."
+                "Request body is required."
 
         }), 400
 
 
-    allowed_statuses = [
-
-        "Applied",
-        "Shortlisted",
-        "Rejected",
-        "Selected"
-
-    ]
-
     status = data.get("status")
+
+
+    if not status:
+
+        return jsonify({
+
+            "message":
+                "Status is required."
+
+        }), 400
+
+
+    # =====================================================
+    # NORMALIZE STATUS
+    #
+    # Frontend can send:
+    #
+    # Selected
+    # selected
+    # SELECTED
+    #
+    # They will all become:
+    #
+    # selected
+    # =====================================================
+
+    status = status.strip().lower()
+
+
+    # =====================================================
+    # ALLOWED STATUSES
+    # =====================================================
+
+    allowed_statuses = {
+
+        "applied",
+
+        "shortlisted",
+
+        "selected",
+
+        "rejected"
+
+    }
+
 
     if status not in allowed_statuses:
 
         return jsonify({
 
             "message":
-            "Invalid application status."
+                "Invalid application status.",
+
+            "allowed_statuses":
+                list(allowed_statuses)
 
         }), 400
 
 
+    # =====================================================
+    # UPDATE APPLICATION STATUS
+    # =====================================================
+
     application.status = status
+
+
+    # =====================================================
+    # GET STUDENT
+    # =====================================================
+
+    student = StudentProfile.query.get(
+        application.student_id
+    )
+
+
+    # =====================================================
+    # CREATE NOTIFICATION
+    # =====================================================
+
+    if student:
+
+        notification = Notification(
+
+            user_id=student.user_id,
+
+            message=(
+                f"Your application for "
+                f"{drive.job_title} at "
+                f"{company.company_name} "
+                f"has been marked as "
+                f"{status}."
+            )
+
+        )
+
+        db.session.add(
+            notification
+        )
+
+
+    # =====================================================
+    # SAVE CHANGES
+    # =====================================================
 
     db.session.commit()
 
 
+    # =====================================================
+    # RESPONSE
+    # =====================================================
+
     return jsonify({
 
         "message":
-        "Status updated successfully."
+            "Application status updated successfully.",
+
+        "status":
+            application.status
 
     }), 200
 
@@ -572,7 +682,7 @@ def update_status(id):
 # SCHEDULE INTERVIEW
 # =========================================================
 
-
+from datetime import datetime
 
 @company_bp.route(
     "/applications/<int:id>/interview",
@@ -600,8 +710,8 @@ def schedule_interview(id):
 
 
     # ---------------------------------------------
-    # Make sure this application belongs
-    # to the logged-in company's drive
+    # Make sure application belongs to
+    # logged-in company's drive
     # ---------------------------------------------
 
     drive = PlacementDrive.query.filter_by(
@@ -613,10 +723,8 @@ def schedule_interview(id):
     if not drive:
 
         return jsonify({
-
             "message":
                 "You cannot schedule an interview for this application."
-
         }), 403
 
 
@@ -624,8 +732,7 @@ def schedule_interview(id):
     # Get request data
     # ---------------------------------------------
 
-    data = request.get_json()
-
+    data = request.get_json() or {}
 
     interview_date_string = data.get(
         "interview_date"
@@ -648,22 +755,31 @@ def schedule_interview(id):
     if not interview_date_string:
 
         return jsonify({
-
             "message":
                 "Interview date and time are required."
-
         }), 400
 
 
     # ---------------------------------------------
-    # Convert string to Python datetime
+    # Validate interview type
+    # ---------------------------------------------
+
+    if not interview_type:
+
+        return jsonify({
+            "message":
+                "Interview type is required."
+        }), 400
+
+
+    # ---------------------------------------------
+    # Convert frontend date string
+    # into Python datetime
     #
-    # Frontend sends:
-    #
+    # Example:
     # 2026-08-20T11:56
     #
-    # Python receives:
-    #
+    # becomes:
     # datetime(2026, 8, 20, 11, 56)
     # ---------------------------------------------
 
@@ -676,24 +792,25 @@ def schedule_interview(id):
     except ValueError:
 
         return jsonify({
-
             "message":
                 "Invalid interview date format."
-
         }), 400
 
 
     # ---------------------------------------------
-    # Validate interview type
+    # Check if interview already exists
     # ---------------------------------------------
 
-    if not interview_type:
+    existing_interview = Interview.query.filter_by(
+        application_id=application.id
+    ).first()
+
+
+    if existing_interview:
 
         return jsonify({
-
             "message":
-                "Interview type is required."
-
+                "An interview is already scheduled for this application."
         }), 400
 
 
@@ -703,7 +820,7 @@ def schedule_interview(id):
 
     interview = Interview(
 
-        application_id=id,
+        application_id=application.id,
 
         interview_date=interview_date,
 
@@ -716,17 +833,50 @@ def schedule_interview(id):
     )
 
 
+    db.session.add(interview)
+
+
     # ---------------------------------------------
-    # Save to database
+    # Get student
     # ---------------------------------------------
 
-    db.session.add(interview)
+    student = StudentProfile.query.get(
+        application.student_id
+    )
+
+
+    # ---------------------------------------------
+    # Create notification for student
+    # ---------------------------------------------
+
+    if student:
+
+        notification = Notification(
+
+            user_id=student.user_id,
+
+            message=(
+                f"Interview scheduled for "
+                f"{drive.job_title} at "
+                f"{company.company_name} "
+                f"on "
+                f"{interview_date.strftime('%d %b %Y, %I:%M %p')}."
+            )
+
+        )
+
+        db.session.add(notification)
+
+
+    # ---------------------------------------------
+    # Commit
+    # ---------------------------------------------
 
     db.session.commit()
 
 
     # ---------------------------------------------
-    # Response
+    # Return response
     # ---------------------------------------------
 
     return jsonify({
@@ -734,11 +884,26 @@ def schedule_interview(id):
         "message":
             "Interview scheduled successfully.",
 
-        "interview_id":
-            interview.id
+        "interview": {
+
+            "id":
+                interview.id,
+
+            "date":
+                interview.interview_date.isoformat(),
+
+            "type":
+                interview.interview_type,
+
+            "status":
+                interview.status,
+
+            "remarks":
+                interview.remarks
+
+        }
 
     }), 201
-
 
 # =========================================================
 # GET SINGLE DRIVE

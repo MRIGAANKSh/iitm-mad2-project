@@ -1,0 +1,7 @@
+ celery -A celery_worker.celery worker --pool=solo --loglevel=info
+
+  celery -A celery_worker.celery beat --loglevel=info
+
+
+  python run.py
+  

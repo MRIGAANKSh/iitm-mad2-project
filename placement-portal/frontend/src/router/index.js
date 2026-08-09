@@ -1,171 +1,376 @@
-import { createRouter, createWebHistory } from "vue-router";
 
-// Auth
+import {
+  createRouter,
+  createWebHistory
+} from "vue-router";
+
+// =====================================================
+// AUTH
+// =====================================================
+
 import Login from "../pages/Login.vue";
 import RegisterStudent from "../pages/RegisterStudent.vue";
 import RegisterCompany from "../pages/RegisterCompany.vue";
 
-// Layouts
+
+// =====================================================
+// LAYOUTS
+// =====================================================
+
 import AdminLayout from "../layouts/AdminLayout.vue";
 import CompanyLayout from "../layouts/CompanyLayout.vue";
 import StudentLayout from "../layouts/StudentLayout.vue";
 
-// Admin
+
+// =====================================================
+// ADMIN
+// =====================================================
+
 import AdminDashboard from "../pages/admin/Dashboard.vue";
 import Students from "../pages/admin/Students.vue";
 import Companies from "../pages/admin/Companies.vue";
 import AdminDrives from "../pages/admin/Drives.vue";
 import Reports from "../pages/admin/Reports.vue";
+import AdminApplications from "../pages/admin/Applications.vue";
 
-// Company
+
+// =====================================================
+// COMPANY
+// =====================================================
+
 import CompanyDashboard from "../pages/company/Dashboard.vue";
 import CreateDrive from "../pages/company/CreateDrive.vue";
 import Drives from "../pages/company/Drives.vue";
 import Applicants from "../pages/company/Applicants.vue";
 import EditDrive from "../pages/company/EditDrives.vue";
 import DriveApplicants from "../pages/company/DriveApplicants.vue";
-import CompanyProfile from "../pages/company/Profile.vue"
+import CompanyProfile from "../pages/company/Profile.vue";
 
-// Student
+
+// =====================================================
+// STUDENT
+// =====================================================
+
 import StudentDashboard from "../pages/student/Dashboard.vue";
 import StudentDrives from "../pages/student/Drives.vue";
 import Applications from "../pages/student/Applications.vue";
 import Profile from "../pages/student/Profile.vue";
 import Resume from "../pages/student/Resume.vue";
 
+
+// =====================================================
+// ROUTES
+// =====================================================
+
 const routes = [
 
-  // Login
+  // ===================================================
+  // LOGIN
+  // ===================================================
+
   {
     path: "/",
-    component: Login,
+    component: Login
   },
 
-  // =========================
+
+  // ===================================================
   // ADMIN
-  // =========================
+  // ===================================================
+
   {
     path: "/admin",
     component: AdminLayout,
 
     children: [
+
+      // Admin Dashboard
       {
         path: "dashboard",
-        component: AdminDashboard,
+        component: AdminDashboard
       },
+
+      // Students
       {
         path: "students",
-        component: Students,
+        component: Students
       },
+
+      // Companies
       {
         path: "companies",
-        component: Companies,
+        component: Companies
       },
+
+      // Placement Drives
       {
         path: "drives",
-        component: AdminDrives,
+        component: AdminDrives
       },
+
+      // Reports
       {
         path: "reports",
-        component: Reports,
+        component: Reports
       },
-    ],
+
+      // Applications
+      {
+        path: "applications",
+        component: AdminApplications
+      }
+
+    ]
   },
 
-  // =========================
+
+  // ===================================================
   // COMPANY
-  // =========================
-// Company Routes
-{
-  path: "/company",
-  component: CompanyLayout,
-  children: [
-    {
-      path: "dashboard",
-      component: CompanyDashboard,
-    },
+  // ===================================================
 
-    {
-      path: "create-drive",
-      component: CreateDrive,
-    },
+  {
+    path: "/company",
+    component: CompanyLayout,
 
-    {
-      path: "drives",
-      component: Drives,
-    },
+    children: [
 
-    // ALL applicants of the company
-    {
-      path: "applicants",
-      component: Applicants,
-    },
+      // Company Dashboard
+      {
+        path: "dashboard",
+        component: CompanyDashboard
+      },
 
-    // Applicants of ONE particular drive
-    {
-      path: "drives/:id/applicants",
-      component: DriveApplicants,
-    },
+      // Create Drive
+      {
+        path: "create-drive",
+        component: CreateDrive
+      },
 
-    {
-      path: "edit-drive/:id",
-      component: EditDrive,
-    },
-    {
-    path: "profile",
-    component: CompanyProfile
-},
-  ],
-},
+      // All Drives
+      {
+        path: "drives",
+        component: Drives
+      },
+
+      // All Applicants
+      {
+        path: "applicants",
+        component: Applicants
+      },
+
+      // Applicants of One Drive
+      {
+        path: "drives/:id/applicants",
+        component: DriveApplicants
+      },
+
+      // Edit Drive
+      {
+        path: "edit-drive/:id",
+        component: EditDrive
+      },
+
+      // Company Profile
+      {
+        path: "profile",
+        component: CompanyProfile
+      }
+
+    ]
+  },
 
 
-  // =========================
+  // ===================================================
   // STUDENT
-  // =========================
+  // ===================================================
+
   {
     path: "/student",
     component: StudentLayout,
 
     children: [
+
+      // Student Dashboard
       {
         path: "dashboard",
-        component: StudentDashboard,
+        component: StudentDashboard
       },
+
+      // Placement Drives
       {
         path: "drives",
-        component: StudentDrives,
+        component: StudentDrives
       },
+
+      // My Applications
       {
         path: "applications",
-        component: Applications,
+        component: Applications
       },
+
+      // Student Profile
       {
         path: "profile",
-        component: Profile,
+        component: Profile
       },
+
+      // Resume
       {
         path: "resume",
-        component: Resume,
-      },
-    ],
+        component: Resume
+      }
+
+    ]
   },
 
-  // Registration
+
+  // ===================================================
+  // REGISTRATION
+  // ===================================================
+
   {
     path: "/register/student",
-    component: RegisterStudent,
+    component: RegisterStudent
   },
 
   {
     path: "/register/company",
-    component: RegisterCompany,
-  },
+    component: RegisterCompany
+  }
 
 ];
 
+
+// =====================================================
+// CREATE ROUTER
+// =====================================================
+
 const router = createRouter({
+
   history: createWebHistory(),
-  routes,
+
+  routes
+
 });
 
+
+// =====================================================
+// ROUTE GUARD
+// =====================================================
+
+router.beforeEach((to, from, next) => {
+
+  const token =
+    localStorage.getItem("token");
+
+  const role =
+    localStorage.getItem("role");
+
+
+  // ===================================================
+  // PUBLIC PAGES
+  // ===================================================
+
+  const publicPages = [
+    "/",
+    "/register/student",
+    "/register/company"
+  ];
+
+
+  if (publicPages.includes(to.path)) {
+
+    next();
+
+    return;
+
+  }
+
+
+  // ===================================================
+  // USER NOT LOGGED IN
+  // ===================================================
+
+  if (!token) {
+
+    next("/");
+
+    return;
+
+  }
+
+
+  // ===================================================
+  // ADMIN ACCESS
+  // ===================================================
+
+  if (to.path.startsWith("/admin")) {
+
+    if (role !== "admin") {
+
+      alert(
+        "Admin access required."
+      );
+
+      next("/");
+
+      return;
+
+    }
+
+  }
+
+
+  // ===================================================
+  // COMPANY ACCESS
+  // ===================================================
+
+  if (to.path.startsWith("/company")) {
+
+    if (role !== "company") {
+
+      alert(
+        "Company access required."
+      );
+
+      next("/");
+
+      return;
+
+    }
+
+  }
+
+
+  // ===================================================
+  // STUDENT ACCESS
+  // ===================================================
+
+  if (to.path.startsWith("/student")) {
+
+    if (role !== "student") {
+
+      alert(
+        "Student access required."
+      );
+
+      next("/");
+
+      return;
+
+    }
+
+  }
+
+
+  // ===================================================
+  // ALLOW ROUTE
+  // ===================================================
+
+  next();
+
+});
+
+
 export default router;
+
