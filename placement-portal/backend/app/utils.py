@@ -13,7 +13,6 @@ def role_required(role):
     def decorator(fn):
 
         @wraps(fn)
-
         def wrapper(*args, **kwargs):
 
             verify_jwt_in_request()

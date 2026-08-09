@@ -4,4 +4,4 @@
 
 
   python run.py
-  
+  docker run -d --name placement-redis -p 6379:6379 redis:7

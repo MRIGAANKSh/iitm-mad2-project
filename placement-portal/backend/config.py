@@ -1,5 +1,7 @@
-
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
 
 BASE_DIR = os.path.abspath(
     os.path.dirname(__file__)
@@ -20,8 +22,8 @@ class Config:
     MAIL_PORT = 587
     MAIL_USE_TLS = True
 
-    MAIL_USERNAME = "23f2003457@ds.study.iitm.ac.in"
-    MAIL_PASSWORD = "intj bdag nrhx iqwk"
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 
     SQLALCHEMY_DATABASE_URI = (
         "sqlite:///"

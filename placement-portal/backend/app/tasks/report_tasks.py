@@ -1,18 +1,25 @@
-from datetime import datetime
-from flask_mail import Message
 
-from app.extensions import mail
+from datetime import datetime
+import os
+
+from dotenv import load_dotenv
+
 from app.celery_app import celery
 from app.extensions import db
+from app.email_sender import send_email
 
 from app.models import (
     PlacementDrive,
     Application,
-    StudentProfile,
-    User
+    StudentProfile
 )
 
-import os
+
+# =====================================================
+# LOAD ENVIRONMENT VARIABLES
+# =====================================================
+
+load_dotenv()
 
 
 @celery.task
@@ -23,11 +30,13 @@ def generate_monthly_report():
     month = now.month
     year = now.year
 
+
     # =====================================================
     # COUNT PLACEMENT DRIVES
     # =====================================================
 
     drives_count = PlacementDrive.query.filter(
+
         db.extract(
             "month",
             PlacementDrive.created_at
@@ -37,13 +46,16 @@ def generate_monthly_report():
             "year",
             PlacementDrive.created_at
         ) == year
+
     ).count()
+
 
     # =====================================================
     # COUNT APPLICATIONS
     # =====================================================
 
     applications_count = Application.query.filter(
+
         db.extract(
             "month",
             Application.applied_at
@@ -53,13 +65,16 @@ def generate_monthly_report():
             "year",
             Application.applied_at
         ) == year
+
     ).count()
+
 
     # =====================================================
     # COUNT SELECTED STUDENTS
     # =====================================================
 
     selected_count = Application.query.filter(
+
         Application.status == "selected",
 
         db.extract(
@@ -71,13 +86,16 @@ def generate_monthly_report():
             "year",
             Application.applied_at
         ) == year
+
     ).count()
+
 
     # =====================================================
     # COUNT STUDENTS
     # =====================================================
 
     students_count = StudentProfile.query.count()
+
 
     # =====================================================
     # CREATE REPORT FOLDER
@@ -89,6 +107,7 @@ def generate_monthly_report():
         report_folder,
         exist_ok=True
     )
+
 
     # =====================================================
     # REPORT FILE
@@ -103,6 +122,7 @@ def generate_monthly_report():
         report_folder,
         filename
     )
+
 
     # =====================================================
     # HTML REPORT
@@ -126,6 +146,8 @@ def generate_monthly_report():
         body {{
             font-family: Arial, sans-serif;
             margin: 40px;
+            background: #f8f9fa;
+            color: #333;
         }}
 
         h1 {{
@@ -137,6 +159,7 @@ def generate_monthly_report():
             padding: 20px;
             margin: 15px 0;
             border-radius: 8px;
+            background: white;
         }}
 
         .value {{
@@ -148,16 +171,19 @@ def generate_monthly_report():
 
 </head>
 
+
 <body>
 
     <h1>
         Monthly Placement Activity Report
     </h1>
 
+
     <p>
         Report Period:
         {month:02d}/{year}
     </p>
+
 
     <div class="card">
 
@@ -171,6 +197,7 @@ def generate_monthly_report():
 
     </div>
 
+
     <div class="card">
 
         <h3>
@@ -182,6 +209,7 @@ def generate_monthly_report():
         </div>
 
     </div>
+
 
     <div class="card">
 
@@ -195,6 +223,7 @@ def generate_monthly_report():
 
     </div>
 
+
     <div class="card">
 
         <h3>
@@ -207,10 +236,12 @@ def generate_monthly_report():
 
     </div>
 
+
 </body>
 
 </html>
 """
+
 
     # =====================================================
     # SAVE REPORT
@@ -224,37 +255,39 @@ def generate_monthly_report():
 
         file.write(html)
 
+
+    # =====================================================
+    # GET ADMIN EMAIL FROM .ENV
+    # =====================================================
+
+    admin_email = os.getenv("ADMIN_EMAIL")
+
+
+    # =====================================================
+    # VALIDATE ADMIN EMAIL
+    # =====================================================
+
+    if not admin_email:
+
+        raise ValueError(
+            "ADMIN_EMAIL is missing from the .env file."
+        )
+
+
     # =====================================================
     # SEND REPORT TO ADMIN
     # =====================================================
 
-    admin = User.query.filter_by(
-        role="admin"
-    ).first()
+    send_email(
 
-    if admin:
+        recipient=admin_email,
 
-        with open(
-            filepath,
-            "r",
-            encoding="utf-8"
-        ) as file:
+        subject="Monthly Placement Activity Report",
 
-            html_content = file.read()
+        html_content=html
 
-        message = Message(
+    )
 
-            subject="Monthly Placement Activity Report",
-
-            recipients=[
-                admin.email
-            ],
-
-            html=html_content
-
-        )
-
-        mail.send(message)
 
     # =====================================================
     # RETURN RESULT
