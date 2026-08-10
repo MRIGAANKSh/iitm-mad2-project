@@ -1,0 +1,309 @@
+
+info:
+  title: Placement Portal Application API
+  description: API for managing students, companies, placement drives, applications and interviews.
+  version: 1.0.0
+
+servers:
+  - url: http://127.0.0.1:5000
+
+tags:
+  - name: Authentication
+  - name: Admin
+  - name: Company
+  - name: Student
+
+paths:
+
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate a user and return a JWT token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  example: student@gmail.com
+                password:
+                  type: string
+                  example: password123
+      responses:
+        "200":
+          description: Login successful
+        "401":
+          description: Invalid credentials
+
+
+  /api/auth/register/student:
+    post:
+      tags:
+        - Authentication
+      summary: Register student
+      description: Create a new student account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+                student_id:
+                  type: string
+                phone:
+                  type: string
+                branch:
+                  type: string
+                cgpa:
+                  type: number
+                graduation_year:
+                  type: integer
+      responses:
+        "201":
+          description: Student registered successfully
+        "400":
+          description: Invalid registration data
+
+
+  /api/auth/register/company:
+    post:
+      tags:
+        - Authentication
+      summary: Register company
+      description: Register a company on the placement portal.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+                company_name:
+                  type: string
+                hr_name:
+                  type: string
+                hr_email:
+                  type: string
+                phone:
+                  type: string
+                website:
+                  type: string
+      responses:
+        "201":
+          description: Company registered successfully
+        "400":
+          description: Invalid registration data
+
+
+  /api/admin/companies:
+    get:
+      tags:
+        - Admin
+      summary: Get companies
+      description: Retrieve registered companies for administration.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Companies retrieved successfully
+        "401":
+          description: Unauthorized
+
+
+  /api/admin/companies/{company_id}/approve:
+    put:
+      tags:
+        - Admin
+      summary: Approve company
+      description: Approve a company registration.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: company_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Company approved successfully
+        "404":
+          description: Company not found
+
+
+  /api/admin/drives/{drive_id}/approve:
+    put:
+      tags:
+        - Admin
+      summary: Approve placement drive
+      description: Approve a placement drive created by a company.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: drive_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Placement drive approved successfully
+        "404":
+          description: Placement drive not found
+
+
+  /api/company/drives:
+    post:
+      tags:
+        - Company
+      summary: Create placement drive
+      description: Create a new placement drive after company approval.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                job_title:
+                  type: string
+                job_description:
+                  type: string
+                eligibility_branch:
+                  type: string
+                minimum_cgpa:
+                  type: number
+                graduation_year:
+                  type: integer
+                application_deadline:
+                  type: string
+                  format: date
+                salary:
+                  type: string
+                location:
+                  type: string
+                employment_type:
+                  type: string
+                vacancies:
+                  type: integer
+      responses:
+        "201":
+          description: Placement drive created successfully
+        "403":
+          description: Company is not approved
+
+
+  /api/company/drives/{drive_id}/applications:
+    get:
+      tags:
+        - Company
+      summary: View applications
+      description: Retrieve applications submitted for a placement drive.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: drive_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Applications retrieved successfully
+        "404":
+          description: Placement drive not found
+
+
+  /api/student/drives:
+    get:
+      tags:
+        - Student
+      summary: View approved drives
+      description: Retrieve approved placement drives available to students.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Placement drives retrieved successfully
+
+
+  /api/student/drives/{drive_id}/apply:
+    post:
+      tags:
+        - Student
+      summary: Apply for placement drive
+      description: Submit an application for an eligible placement drive.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: drive_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: Application submitted successfully
+        "400":
+          description: Student is not eligible or has already applied
+        "404":
+          description: Placement drive not found
+
+
+  /api/student/applications:
+    get:
+      tags:
+        - Student
+      summary: View applications
+      description: Retrieve the student's placement applications and their statuses.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Applications retrieved successfully
+
+
+  /api/student/applications/export:
+    post:
+      tags:
+        - Student
+      summary: Export applications
+      description: Trigger an asynchronous Celery job to generate the student's application history as a CSV file.
+      security:
+        - bearerAuth: []
+      responses:
+        "202":
+          description: Export job queued successfully
+
+
+components:
+
+  securitySchemes:
+
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

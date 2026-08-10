@@ -120,20 +120,7 @@
         </router-link>
 
 
-        <!-- Reports -->
-
-        <router-link
-          to="/admin/reports"
-          class="sidebar-link"
-        >
-
-          
-
-          <span>
-            Reports
-          </span>
-
-        </router-link>
+        
 
 
       </nav>
